@@ -3,8 +3,6 @@ package com.example.demo123.controller;
 import com.example.demo123.data.dao.PostDao;
 import com.example.demo123.data.dto.Post;
 import com.example.demo123.data.entity.PostEntity;
-import com.example.demo123.data.repository.PostRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -108,16 +106,13 @@ public class PostController {
                 }
             });
             try {
-                return new PostDao().addPost(post, headers);
+                return new PostDao().InsertPost(post, headers);
             } catch (SQLException e) {
-                System.out.println("SQLException");
+                map.put("SqlException", e.getMessage());
             } catch (Exception e) {
-                System.out.println("unKnown Error");
+                map.put("OtherException", e.getMessage());;
             }
+            return new ResponseEntity<>(map, headers, 500);
         }
-
-        HashMap<String, String> map = new HashMap<>();
-        // todo 서버(DB) 에러 발생 시 반환할 응답 본문 작성할 것..
-        return new ResponseEntity<>(map, headers, 500);
     }
 }
