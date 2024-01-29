@@ -1,5 +1,6 @@
 package com.example.demo123.controller;
 
+import com.example.demo123.data.dao.PostDao;
 import com.example.demo123.data.dto.Post;
 import com.example.demo123.data.entity.PostEntity;
 import com.example.demo123.data.repository.PostRepository;
@@ -10,17 +11,15 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.nio.charset.StandardCharsets;
+import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1/post-api")
 public class PostController {
-    private final PostRepository postRepository;
 
-    @Autowired // 필드 주입이 권장되지 않음, 생성자 인자에 자동와이어링
-    public PostController(PostRepository postRepository) {
-        this.postRepository = postRepository;
+    public PostController() {
     }
 
     // 한번에 하나의 포스트만 업로드 가능
@@ -108,23 +107,17 @@ public class PostController {
                     }
                 }
             });
-            // DTO 에서 엔티티 형식으로 변환
-            // 객체 참조 문제로 인해 컨트롤러에서 처리
-            postE.setWriter(post.getWriter());
-            postE.setTitle(post.getTitle());
-            postE.setContent(post.getContent());
-            postE.setImg(post.getImg());
-            postE.setEmail(post.getEmail());
-            this.postRepository.save(postE);
-
-            // 반환 타입을 충족하고자 기존 PostEntity 타입 객체의 값을 끌어다 HashMap Map collection 생성
-            map.put("writer", postE.getWriter());
-            map.put("title", postE.getTitle());
-            map.put("content", postE.getContent());
-            map.put("img", postE.getImg());
-            map.put("email", postE.getEmail());
-
-            return new ResponseEntity<>(map, headers, 201);
+            try {
+                return new PostDao().addPost(post, headers);
+            } catch (SQLException e) {
+                System.out.println("SQLException");
+            } catch (Exception e) {
+                System.out.println("unKnown Error");
+            }
         }
+
+        HashMap<String, String> map = new HashMap<>();
+        // todo 서버(DB) 에러 발생 시 반환할 응답 본문 작성할 것
+        return new ResponseEntity<>(map, headers, 500);
     }
 }

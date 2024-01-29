@@ -16,23 +16,4 @@ import java.util.Map;
 @SpringBootTest
 class Demo123ApplicationTests {
 
-	@Autowired
-	public PostRepository postRepository;
-	@Test
-	@Transactional
-	void Save() {
-		Map<String, String> params = new HashMap<>();
-		params.put("writer", "us");
-		params.put("content", "some");
-		params.put("email", "4.4@naver.com");
-		params.put("title", "TTl");
-		new PostController(postRepository).UploadPost(params);
-	}
-
-	@Test
-	@Transactional
-	void Delete() {
-		PostEntity ps = new PostEntity();
-		new DeleteController(postRepository).DeletePost("22", "");
-	}
 }
