@@ -2,13 +2,13 @@ plugins {
 	id 'java'
 	id 'org.springframework.boot' version '3.2.1'
 	id 'io.spring.dependency-management' version '1.1.4'
+    id 'org.jetbrains.kotlin.jvm'
 }
 
 group = 'com.example'
 version = '0.0.1'
 
 java {
-	sourceCompatibility = '17'
 }
 
 configurations {
@@ -35,10 +35,13 @@ dependencies { // 라이브러리 사용을 위한 의존성 설정
 	implementation 'org.springframework.boot:spring-boot-starter-web'
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
 	runtimeOnly 'com.mysql:mysql-connector-j'
-	// End
+    // End
 
 }
 
 tasks.named('test') {
 	useJUnitPlatform()
+}
+kotlin {
+    jvmToolchain(17)
 }

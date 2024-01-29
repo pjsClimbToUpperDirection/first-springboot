@@ -26,7 +26,7 @@ public class PostController {
     // 한번에 하나의 포스트만 업로드 가능
     // 예시 -> http://localhost:8085/api/v1/post-api/uploadPost?email=eerI@gmail.com&content=Aop&writer=me
     @PostMapping("/uploadPost")
-    public ResponseEntity<HashMap> validate(@RequestParam Map<String, String> params){
+    public ResponseEntity<HashMap> UploadPost(@RequestParam Map<String, String> params){
         HttpHeaders headers= new HttpHeaders();
         headers.setContentType(new MediaType("application", "json", StandardCharsets.UTF_8));
 
@@ -108,6 +108,7 @@ public class PostController {
                     }
                 }
             });
+            // DTO 에서 엔티티 형식으로 변환
             // 객체 참조 문제로 인해 컨트롤러에서 처리
             postE.setWriter(post.getWriter());
             postE.setTitle(post.getTitle());
