@@ -117,7 +117,7 @@ public class PostController {
         }
 
         HashMap<String, String> map = new HashMap<>();
-        // todo 서버(DB) 에러 발생 시 반환할 응답 본문 작성할 것
+        // todo 서버(DB) 에러 발생 시 반환할 응답 본문 작성할 것..
         return new ResponseEntity<>(map, headers, 500);
     }
 }
