@@ -1,7 +1,6 @@
 package com.example.demo123.data.dto;
 
 import jakarta.persistence.Id;
-import jakarta.persistence.UniqueConstraint;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;

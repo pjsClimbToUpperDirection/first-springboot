@@ -15,7 +15,7 @@ import java.util.HashMap;
 public class PostDao {
     public ResponseEntity<HashMap> InsertPost(Post post, HttpHeaders headers) throws Exception {
         AnnotationConfigApplicationContext ctx = new AnnotationConfigApplicationContext(DbConfig.class);
-        DataSource dataSource = ctx.getBean("dataSource22", DataSource.class);
+        DataSource dataSource = ctx.getBean("dataSource", DataSource.class);
         Connection connection = null;
         HashMap<String, String> map = new HashMap<>();
         try {
