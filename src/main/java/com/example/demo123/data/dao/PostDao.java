@@ -10,35 +10,38 @@ import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.HashMap;
 
 public class PostDao {
-    public ResponseEntity<HashMap> InsertPost(Post post, HttpHeaders headers) throws Exception {
+    public ResponseEntity<HashMap> InsertPost(Post post, HttpHeaders headers) throws SQLException, Exception{
         AnnotationConfigApplicationContext ctx = new AnnotationConfigApplicationContext(DbConfig.class);
         DataSource dataSource = ctx.getBean("dataSource", DataSource.class);
         Connection connection = null;
         HashMap<String, String> map = new HashMap<>();
-        try {
-            connection = dataSource.getConnection();
-            PreparedStatement statement = connection.prepareStatement("INSERT INTO posts (writer, email, title, content, img) VALUES (?, ?, ?, ?, ?)");
-            statement.setString(1, post.getWriter());
-            statement.setString(2, post.getEmail());
-            statement.setString(3, post.getTitle());
-            statement.setString(4, post.getContent());
-            statement.setString(5, post.getImg());
-            statement.executeUpdate();
-        } catch (SQLException e) {
-            throw new Exception("Error is occurred on the SQL DB - Insert", e);
-        } finally {
-            if (connection != null) {
-                connection.close();
-                map.put("writer", post.getWriter());
-                map.put("title", post.getTitle());
-                map.put("content", post.getContent());
-                map.put("img", post.getImg());
-                map.put("email", post.getEmail());
-            }
+        Date now = new Date();
+        SimpleDateFormat date = new SimpleDateFormat("yy-MM-dd HH:mm"); // string 타입
+
+        connection = dataSource.getConnection();
+        PreparedStatement statement = connection.prepareStatement("INSERT INTO posts (writer, email, title, content, img, created_date) VALUES (?, ?, ?, ?, ?, ?)");
+        statement.setString(1, post.getWriter());
+        statement.setString(2, post.getEmail());
+        statement.setString(3, post.getTitle());
+        statement.setString(4, post.getContent());
+        statement.setString(5, post.getImg());
+        statement.setString(6, date.format(now));
+        statement.executeUpdate();
+
+        if (connection != null) {
+            connection.close();
+            map.put("writer", post.getWriter());
+            map.put("title", post.getTitle());
+            map.put("content", post.getContent());
+            map.put("img", post.getImg());
+            map.put("email", post.getEmail());
         }
+
         return new ResponseEntity<>(map, headers, 201);
     }
 

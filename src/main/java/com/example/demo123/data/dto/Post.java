@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor // 기본적으로 인자가 없는 생성자를 가지므로 setter 메서드로만 내부 필드값 설정 가능
 public class Post { // dto는 값 전달이라는 역할만을 가지므로 이러한 역할에 적합하게끔 구현할 것
+
     private String id;
     private String writer;
     private String title;

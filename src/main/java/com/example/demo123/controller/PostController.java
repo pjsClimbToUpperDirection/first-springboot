@@ -2,7 +2,6 @@ package com.example.demo123.controller;
 
 import com.example.demo123.data.dao.PostDao;
 import com.example.demo123.data.dto.Post;
-import com.example.demo123.data.entity.PostEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -26,8 +25,6 @@ public class PostController {
     public ResponseEntity<HashMap> UploadPost(@RequestParam Map<String, String> params){
         HttpHeaders headers= new HttpHeaders();
         headers.setContentType(new MediaType("application", "json", StandardCharsets.UTF_8));
-
-        PostEntity postE = new PostEntity(); // 참조값을 할당한 후 값을 설정해야 하나의 객체에 필요한 모든 값을 저장할 수 있다.
 
         Post post = new Post();
 
@@ -108,7 +105,7 @@ public class PostController {
             try {
                 return new PostDao().InsertPost(post, headers);
             } catch (SQLException e) {
-                map.put("SqlException", e.getMessage());
+                map.put("SqlException", e.toString());
             } catch (Exception e) {
                 map.put("OtherException", e.getMessage());;
             }
