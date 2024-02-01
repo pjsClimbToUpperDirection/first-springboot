@@ -34,11 +34,9 @@ public class GetController {
             switch (key) {
                 case "writer" -> {
                     post.setWriter(value);
-                    System.out.println("Writer: " + post.getWriter());
                 }
                 case "title" -> {
                     post.setTitle(value);
-                    System.out.println("title: " + post.getTitle());
                 }
                 default -> {
                     System.out.println("unKnown value");

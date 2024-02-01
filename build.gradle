@@ -34,8 +34,9 @@ dependencies { // 라이브러리 사용을 위한 의존성 설정
 	// DataBase dependency (mysql)
 	implementation 'org.springframework.boot:spring-boot-starter-web'
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-	implementation 'com.mysql:mysql-connector-j'
-    // End
+	implementation 'com.mysql:mysql-connector-j:8.3.0'
+
+	// spring JDBC
 	implementation 'org.springframework.data:spring-data-jdbc'
 }
 
