@@ -9,10 +9,6 @@ import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 public class Demo123Application {
 
 	public static void main(String[] args) {
-		try {
-			SpringApplication.run(Demo123Application.class, args);
-		} catch (NullPointerException e) {
-			System.err.println("NullPointerException is occurred check your DB: " + e);
-		}
+		SpringApplication.run(Demo123Application.class, args);
 	}
 }
