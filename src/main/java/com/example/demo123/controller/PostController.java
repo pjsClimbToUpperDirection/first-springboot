@@ -79,23 +79,15 @@ public class PostController {
                 switch (key) {
                     case "writer" -> {
                         post.setWriter(value);
-                        System.out.println("Writer: " + post.getWriter());
                     }
                     case "title" -> {
                         post.setTitle(value);
-                        System.out.println("title: " + post.getTitle());
                     }
                     case "content" -> {
                         post.setContent(value);
-                        System.out.println("Content: " + post.getContent());
-                    }
-                    case "img" -> {
-                        post.setImg(value);
-                        System.out.println("Img: " + post.getImg());
                     }
                     case "email" -> {
                         post.setEmail(value);
-                        System.out.println("Email: " + post.getEmail());
                     }
                     default -> {
                         System.out.println("unKnown value");
@@ -105,7 +97,7 @@ public class PostController {
             try {
                 return new PostDao().InsertPost(post, headers);
             } catch (SQLException e) {
-                map.put("SqlException", e.toString());
+                map.put("SqlException", e.getMessage());
             } catch (Exception e) {
                 map.put("OtherException", e.getMessage());;
             }

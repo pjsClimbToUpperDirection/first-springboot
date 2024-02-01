@@ -9,63 +9,95 @@ import org.springframework.http.ResponseEntity;
 import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
-import java.sql.SQLException;
+import java.sql.ResultSet;
 import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.HashMap;
+import java.util.*;
 
+
+// 추후 반복되는 코드를 분리할수 있도록 한다.
 public class PostDao {
-    public ResponseEntity<HashMap> InsertPost(Post post, HttpHeaders headers) throws SQLException, Exception{
+    private static final String[] columns = {"post_id", "writer", "email", "title", "content", "created_date", "updated_date"};
+    public ResponseEntity<HashMap> InsertPost(Post post, HttpHeaders httpHeaders) throws Exception{
         AnnotationConfigApplicationContext ctx = new AnnotationConfigApplicationContext(DbConfig.class);
         DataSource dataSource = ctx.getBean("dataSource", DataSource.class);
         Connection connection = null;
-        HashMap<String, String> map = new HashMap<>();
+        HashMap<String, Integer> map = new HashMap<>();
+        int insertedRow = 0;
+
         Date now = new Date();
         SimpleDateFormat date = new SimpleDateFormat("yy-MM-dd HH:mm"); // string 타입
 
         connection = dataSource.getConnection();
-        PreparedStatement statement = connection.prepareStatement("INSERT INTO posts (writer, email, title, content, img, created_date) VALUES (?, ?, ?, ?, ?, ?)");
+        PreparedStatement statement = connection.prepareStatement("INSERT INTO posts (writer, email, title, content, created_date) VALUES (?, ?, ?, ?, ?)");
         statement.setString(1, post.getWriter());
         statement.setString(2, post.getEmail());
         statement.setString(3, post.getTitle());
         statement.setString(4, post.getContent());
-        statement.setString(5, post.getImg());
-        statement.setString(6, date.format(now));
-        statement.executeUpdate();
+        statement.setString(5, date.format(now));
+        insertedRow = statement.executeUpdate();
 
-        if (connection != null) {
-            connection.close();
-            map.put("writer", post.getWriter());
-            map.put("title", post.getTitle());
-            map.put("content", post.getContent());
-            map.put("img", post.getImg());
-            map.put("email", post.getEmail());
-        }
+        map.put("INSERTED_rows_number", insertedRow);
+        System.out.println("INSERTED_rows_number: " + insertedRow);
+        connection.close();
 
-        return new ResponseEntity<>(map, headers, 201);
+        return new ResponseEntity<>(map, httpHeaders, 201);
     }
 
-    public ResponseEntity<HashMap> DeletePost(Post post, HttpHeaders headers) throws Exception {
+    public ResponseEntity<HashMap> DeletePost(Post post, HttpHeaders httpHeaders) throws Exception {
         AnnotationConfigApplicationContext ctx = new AnnotationConfigApplicationContext(DbConfig.class);
-        DataSource dataSource = ctx.getBean("dataSource22", DataSource.class);
+        DataSource dataSource = ctx.getBean("dataSource", DataSource.class);
         Connection connection = null;
-        HashMap<String, String> map = new HashMap<>();
-        try {
-            connection = dataSource.getConnection();
-            // ? 구문으로 선언문에 변수 체크포인트 지정, 1부터 시작하는 인덱스를 통하여 값을 할당
-            PreparedStatement statement = connection.prepareStatement("DELETE FROM users WHERE writer = ? AND title = ?");
+        HashMap<String, Integer> map = new HashMap<>();
+        int DeletedRow = 0;
+
+        connection = dataSource.getConnection();
+        PreparedStatement statement = connection.prepareStatement("DELETE FROM posts WHERE writer = ? AND title = ?");
+        statement.setString(1, post.getWriter());
+        statement.setString(2, post.getTitle());
+        DeletedRow = statement.executeUpdate();
+
+        map.put("DELETED_rows_number", DeletedRow);
+        System.out.println("DELETED_rows_number: " + DeletedRow);
+        connection.close();
+
+        return new ResponseEntity<>(map, httpHeaders, 201);
+    }
+
+    public ResponseEntity<HashMap> lookUpPosts(Post post, HttpHeaders httpHeaders) throws Exception {
+        AnnotationConfigApplicationContext ctx = new AnnotationConfigApplicationContext(DbConfig.class);
+        DataSource dataSource = ctx.getBean("dataSource", DataSource.class);
+        Connection connection = null;
+        HashMap<Integer, HashMap<String, String>> map = new HashMap<>();
+        ResultSet selectedRow = null;
+
+        connection = dataSource.getConnection();
+        // ? 구문으로 선언문에 변수 체크포인트 지정, 1부터 시작하는 인덱스를 통하여 값을 할당
+        if(post.getWriter() != null & post.getTitle() != null){
+            PreparedStatement statement = connection.prepareStatement("SELECT * FROM posts WHERE writer = ? AND title = ?");
             statement.setString(1, post.getWriter());
             statement.setString(2, post.getTitle());
-            statement.executeQuery();
-        } catch (SQLException e) {
-            throw new Exception("Error is occurred on the SQL DB - Delete", e);
-        } finally {
-            if (connection != null) {
-                connection.close();
-                map.put("writer", post.getWriter());
-                map.put("title", post.getTitle());
-            }
+            selectedRow = statement.executeQuery();
+        } else if (post.getWriter() != null) {
+            PreparedStatement statement = connection.prepareStatement("SELECT * FROM posts WHERE writer = ?");
+            statement.setString(1, post.getWriter());
+            selectedRow = statement.executeQuery();
+        } else {
+            PreparedStatement statement = connection.prepareStatement("SELECT * FROM posts WHERE title = ?");
+            statement.setString(1, post.getTitle());
+            selectedRow = statement.executeQuery();
         }
-        return new ResponseEntity<>(map, headers, 201);
+
+        while (selectedRow.next()){
+            HashMap<String, String> columnList = new HashMap<>();
+            for (String column : columns) {
+                columnList.put(column, selectedRow.getString(column));
+            }
+            map.put(selectedRow.getInt("post_id"), columnList);
+        }
+        System.out.println("SELECTED_ROWS -> " + map);
+
+        connection.close();
+
+        return new ResponseEntity<>(map, httpHeaders, 201);
     }
 }

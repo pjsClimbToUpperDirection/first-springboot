@@ -3,6 +3,8 @@ package com.example.demo123.data.dto;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.sql.Blob;
+
 // http://localhost:8085/api/v1/post-api/uploadPost?writer=me&email=something@gmail.com&...
 // dto 내부에서 유효성 검증 담당(dto is on duty for validation)
 @Getter
@@ -13,7 +15,6 @@ public class Post { // dto는 값 전달이라는 역할만을 가지므로 이�
     private String writer;
     private String title;
     private String content;
-    private String img;
     private String email; // 이메일 형식을 준수해야 함
 
     // 별도 setter 메서드 내부에 자체적인 검증 로직을 구현
@@ -44,9 +45,5 @@ public class Post { // dto는 값 전달이라는 역할만을 가지므로 이�
             throw new IllegalArgumentException("content should not be null");// 예외 처리 로직 별도로 구현할 것
         }
         this.content = content;
-    }
-
-    public void setImg(String img) {
-        this.img = img;
     }
 }

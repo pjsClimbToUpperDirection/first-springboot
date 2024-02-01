@@ -13,7 +13,6 @@ import org.springframework.web.bind.annotation.RestController;
 import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
 import java.util.HashMap;
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/delete-api")
@@ -36,7 +35,6 @@ public class DeleteController {
             post.setTitle(title);
         else
             throw new IllegalArgumentException("title must be defined");
-
         try {
             return new PostDao().DeletePost(post, headers);
         } catch (SQLException e) {
