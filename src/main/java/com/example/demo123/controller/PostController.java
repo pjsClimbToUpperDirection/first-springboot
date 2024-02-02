@@ -52,20 +52,15 @@ public class PostController {
             for (Exception e : exceptions) {
                 if (e != null) {
                     switch (e.getMessage()) {
-                        case "writer must be defined" -> {
+                        case "writer must be defined" ->
                             map.put("writer", e.toString());
-                        }
-                        case "content must be defined" -> {
+                        case "content must be defined" ->
                             map.put("content", e.toString());
-                        }
-                        case "email address must be defined" -> {
+                        case "email address must be defined" ->
                             map.put("email", e.toString());
-                        }
-                        case "title must be defined" -> {
+                        case "title must be defined" ->
                             map.put("title", e.toString());
-                        }
-                        default -> {
-                        }
+                        default -> {}
                     }
                 }
             }
@@ -75,31 +70,31 @@ public class PostController {
             // key=value 인자의 순서를 알수 없기에 case 문 반복
             HashMap<String, String> map = new HashMap<>();
 
-            params.forEach((key, value) -> {
-                switch (key) {
-                    case "writer" -> {
-                        post.setWriter(value);
+            try {
+                params.forEach((key, value) -> {
+                    switch (key) {
+                        case "writer" ->
+                            post.setWriter(value);
+                        case "title" ->
+                            post.setTitle(value);
+                        case "content" ->
+                            post.setContent(value);
+                        case "email" ->
+                            post.setEmail(value);
+                        default ->
+                            System.out.println("unKnown value");
                     }
-                    case "title" -> {
-                        post.setTitle(value);
-                    }
-                    case "content" -> {
-                        post.setContent(value);
-                    }
-                    case "email" -> {
-                        post.setEmail(value);
-                    }
-                    default -> {
-                        System.out.println("unKnown value");
-                    }
-                }
-            });
+                });
+            } catch (IllegalArgumentException e) {
+                map.put("IllegalArgumentException", e.getMessage());
+                return new ResponseEntity<>(map, headers, 400);
+            }
             try {
                 return new PostDao().InsertPost(post, headers);
             } catch (SQLException e) {
                 map.put("SqlException", e.getMessage());
             } catch (Exception e) {
-                map.put("OtherException", e.getMessage());;
+                map.put("OtherException", e.getMessage());
             }
             return new ResponseEntity<>(map, headers, 500);
         }

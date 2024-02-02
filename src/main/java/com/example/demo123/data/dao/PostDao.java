@@ -16,16 +16,17 @@ import java.util.*;
 
 // 추후 반복되는 코드를 분리할수 있도록 한다.
 public class PostDao {
-    private static final String[] columns = {"post_id", "writer", "email", "title", "content", "created_date", "updated_date"};
+
+    AnnotationConfigApplicationContext ctx = new AnnotationConfigApplicationContext(DbConfig.class);
+    DataSource dataSource = ctx.getBean("dataSource", DataSource.class);
     public ResponseEntity<HashMap> InsertPost(Post post, HttpHeaders httpHeaders) throws Exception{
-        AnnotationConfigApplicationContext ctx = new AnnotationConfigApplicationContext(DbConfig.class);
-        DataSource dataSource = ctx.getBean("dataSource", DataSource.class);
-        Connection connection = null;
+        Connection connection;
+
         HashMap<String, Integer> map = new HashMap<>();
-        int insertedRow = 0;
+        int insertedRow;
 
         Date now = new Date();
-        SimpleDateFormat date = new SimpleDateFormat("yy-MM-dd HH:mm"); // string 타입
+        SimpleDateFormat date = new SimpleDateFormat("yy-MM-dd"); // string 타입
 
         connection = dataSource.getConnection();
         PreparedStatement statement = connection.prepareStatement("INSERT INTO posts (writer, email, title, content, created_date) VALUES (?, ?, ?, ?, ?)");
@@ -44,11 +45,10 @@ public class PostDao {
     }
 
     public ResponseEntity<HashMap> DeletePost(Post post, HttpHeaders httpHeaders) throws Exception {
-        AnnotationConfigApplicationContext ctx = new AnnotationConfigApplicationContext(DbConfig.class);
-        DataSource dataSource = ctx.getBean("dataSource", DataSource.class);
-        Connection connection = null;
+        Connection connection;
+
         HashMap<String, Integer> map = new HashMap<>();
-        int DeletedRow = 0;
+        int DeletedRow;
 
         connection = dataSource.getConnection();
         PreparedStatement statement = connection.prepareStatement("DELETE FROM posts WHERE writer = ? AND title = ?");
@@ -64,11 +64,10 @@ public class PostDao {
     }
 
     public ResponseEntity<HashMap> lookUpPosts(Post post, HttpHeaders httpHeaders) throws Exception {
-        AnnotationConfigApplicationContext ctx = new AnnotationConfigApplicationContext(DbConfig.class);
-        DataSource dataSource = ctx.getBean("dataSource", DataSource.class);
-        Connection connection = null;
+        Connection connection;
+
         HashMap<Integer, HashMap<String, String>> map = new HashMap<>();
-        ResultSet selectedRow = null;
+        ResultSet selectedRow;
 
         connection = dataSource.getConnection();
         // ? 구문으로 선언문에 변수 체크포인트 지정, 1부터 시작하는 인덱스를 통하여 값을 할당
@@ -87,6 +86,34 @@ public class PostDao {
             selectedRow = statement.executeQuery();
         }
 
+        resultSet(selectedRow, map);
+
+        connection.close();
+
+        return new ResponseEntity<>(map, httpHeaders, 201);
+    }
+
+    public ResponseEntity<HashMap> lookUpPostsByDate(Post post, HttpHeaders httpHeaders) throws Exception {
+        Connection connection;
+
+        HashMap<Integer, HashMap<String, String>> map = new HashMap<>();
+        ResultSet selectedRow;
+
+        connection = dataSource.getConnection();
+        PreparedStatement statement = connection.prepareStatement("SELECT * FROM posts WHERE (created_date = ? AND updated_date IS NULL) OR updated_date = ?");
+        statement.setString(1, post.getCreated_date());
+        statement.setString(2, post.getCreated_date());
+        selectedRow = statement.executeQuery();
+
+        resultSet(selectedRow, map);
+
+        connection.close();
+
+        return new ResponseEntity<>(map, httpHeaders, 201);
+    }
+
+    private void resultSet(ResultSet selectedRow, HashMap<Integer, HashMap<String, String>> map) throws Exception{
+        String[] columns = {"post_id", "writer", "email", "title", "content", "created_date", "updated_date"};
         while (selectedRow.next()){
             HashMap<String, String> columnList = new HashMap<>();
             for (String column : columns) {
@@ -95,9 +122,5 @@ public class PostDao {
             map.put(selectedRow.getInt("post_id"), columnList);
         }
         System.out.println("SELECTED_ROWS -> " + map);
-
-        connection.close();
-
-        return new ResponseEntity<>(map, httpHeaders, 201);
     }
 }

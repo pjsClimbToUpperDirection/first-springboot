@@ -3,19 +3,20 @@ package com.example.demo123.data.dto;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.sql.Blob;
 
 // http://localhost:8085/api/v1/post-api/uploadPost?writer=me&email=something@gmail.com&...
-// dto 내부에서 유효성 검증 담당(dto is on duty for validation)
+// dto is on duty for validation
 @Getter
-@NoArgsConstructor // 기본적으로 인자가 없는 생성자를 가지므로 setter 메서드로만 내부 필드값 설정 가능
-public class Post { // dto는 값 전달이라는 역할만을 가지므로 이러한 역할에 적합하게끔 구현할 것
+@NoArgsConstructor
+public class Post {
 
     private String id;
     private String writer;
     private String title;
     private String content;
     private String email; // 이메일 형식을 준수해야 함
+    private String created_date;
+    private String updated_date;
 
     // 별도 setter 메서드 내부에 자체적인 검증 로직을 구현
     public void setEmail(String email) {
@@ -45,5 +46,19 @@ public class Post { // dto는 값 전달이라는 역할만을 가지므로 이�
             throw new IllegalArgumentException("content should not be null");// 예외 처리 로직 별도로 구현할 것
         }
         this.content = content;
+    }
+
+    public void setCreated_date(String created_date) {
+        if (!created_date.matches("^[2-3][0-9]-[0-1][0-9]-[0-3][0-9]")) {
+            throw new IllegalArgumentException("date type should be observed specific format, for example: 24-07-22");
+        }
+        this.created_date = created_date;
+    }
+
+    public void setUpdated_date(String updated_date) {
+        if (!updated_date.matches("^[2-3][0-9]-[0-1][0-9]-[0-3][0-9]")) {
+            throw new IllegalArgumentException("date type should be observed specific format, for example: 24-07-22");
+        }
+        this.updated_date = updated_date;
     }
 }
