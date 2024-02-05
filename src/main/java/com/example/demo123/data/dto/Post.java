@@ -5,9 +5,9 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 
-// http://localhost:8085/api/v1/post-api/uploadPost?writer=me&email=something@gmail.com&...
 // dto is on duty for validation
 @Getter
+@Setter
 @NoArgsConstructor
 public class Post {
 
@@ -20,34 +20,13 @@ public class Post {
     private String updated_date;
 
     // 별도 setter 메서드 내부에 자체적인 검증 로직을 구현
-    // dto 내의 검증은 값의 존재 여부가 아닌 값의 타입에
+    // dto 내의 검증은 값의 존재 여부가 아닌 값의 형식이 요구사항을 충족하는지 여부만을 확인
     public void setEmail(String email) {
         // 정규 표현식 (Regular expression) 사용됨
         if (!email.matches("^[A-Za-z0-9+_.-]+@(.+)$")) { // @ 앞에 대소문자 알파벳, 0~9까지의 숫자, 언더바,점,하이픈 허용됨, 뒤로는 하나 이상의 어떠한 문자가 존재해야 함
             throw new IllegalArgumentException("this is not valid for used to email address");
         }
         this.email = email;
-    }
-
-    public void setWriter(String writer) {
-        if (writer == null) {
-            throw new IllegalArgumentException("writer should not be null");
-        }
-        this.writer = writer;
-    }
-
-    public void setTitle(String title) {
-        if (title == null) {
-            throw new IllegalArgumentException("title should not be null");
-        }
-        this.title = title;
-    }
-
-    public void setContent(String content) {
-        if (content == null) {
-            throw new IllegalArgumentException("content should not be null");
-        }
-        this.content = content;
     }
 
     public void setCreated_date(String created_date) {

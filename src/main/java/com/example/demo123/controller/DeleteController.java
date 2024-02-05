@@ -22,22 +22,13 @@ public class DeleteController {
     public ResponseEntity<HashMap> DeletePost (@RequestParam Map<String, String> params) {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(new MediaType("application", "json", StandardCharsets.UTF_8));
-        Post post = new Post();
-        params.forEach((key, value) -> {
-            switch (key) {
-                case "writer" ->
-                        post.setWriter(value);
-                case "title" ->
-                        post.setTitle(value);
-                case "date" ->
-                        post.setCreated_date(value);
-                default ->
-                        System.out.println("unKnown value");
-            }
-        });
-        HashMap<String, String> mapForException = new HashMap<>();
 
+        Post post = new Post();
+        new setDto().multipurposeDTO(params, post);
+
+        HashMap<String, String> mapForException = new HashMap<>();
         try {
+            // 3가지 인자 중 2개 이상이 주어질 시 DELETE 쿼리를 실행하게끔 구현해 보기
             if (post.getWriter() == null)
                 mapForException.put("IllegalArgumentException", "writer must be defined");
             if (post.getTitle() == null)

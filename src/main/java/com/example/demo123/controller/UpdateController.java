@@ -25,26 +25,12 @@ public class UpdateController {
         headers.setContentType(new MediaType("application", "json", StandardCharsets.UTF_8));
         Post SelectedPost = new Post();
         Post UpdatedPost = new Post();
+
         HashMap<String, String> mapForException = new HashMap<>();
         try {
-            params.forEach((key, value) -> {
-                switch (key) {
-                    case "writer" -> {
-                        SelectedPost.setWriter(value);
-                    }
-                    case "title" -> {
-                        SelectedPost.setTitle(value);
-                    }
-                    case "newTitle" -> {
-                        UpdatedPost.setTitle(value);
-                    }
-                    case "newContent" ->{
-                        UpdatedPost.setContent(value);
-                    }
-                    default ->
-                            System.out.println("unKnown value");
-                }
-            });
+            new setDto().multipurposeDTO(params, SelectedPost);
+            new setDto().multipurposeDTO(params, UpdatedPost);
+
             if (SelectedPost.getWriter() == null)
                 mapForException.put("IllegalArgumentException", "writer must be defined");
             if (SelectedPost.getTitle() == null)

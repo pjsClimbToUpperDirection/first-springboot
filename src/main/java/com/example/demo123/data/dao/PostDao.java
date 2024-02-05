@@ -17,15 +17,14 @@ import java.util.*;
 // 추후 반복되는 코드를 분리할수 있도록 한다.
 // 정의된 다음 네 가지 메서드 이외에 추가 메서드 작성은 지양할 것
 public class PostDao {
+    public PostDao(){}
     AnnotationConfigApplicationContext ctx = new AnnotationConfigApplicationContext(DbConfig.class);
     DataSource dataSource = ctx.getBean("dataSource", DataSource.class);
 
-
+    Date now = new Date();
+    SimpleDateFormat date = new SimpleDateFormat("yy-MM-dd"); // string 타입
 
     public ResponseEntity<HashMap> InsertPost(Post post, HttpHeaders httpHeaders) throws Exception{
-        Date now = new Date();
-        SimpleDateFormat date = new SimpleDateFormat("yy-MM-dd"); // string 타입
-
         HashMap<String, Integer> map = new HashMap<>();
         int insertedRow;
 
@@ -48,7 +47,6 @@ public class PostDao {
     public ResponseEntity<HashMap> lookUpPosts(Post post, HttpHeaders httpHeaders) throws Exception {
         Connection connection;
 
-        HashMap<Integer, HashMap<String, String>> map = new HashMap<>();
         ResultSet selectedRow;
 
         PreparedStatement statement;
@@ -98,12 +96,9 @@ public class PostDao {
             statement.setString(2, post.getCreated_date());
         }
         selectedRow = statement.executeQuery();
-
-        resultSet(selectedRow, map);
-
         connection.close();
 
-        return new ResponseEntity<>(map, httpHeaders, 201);
+        return new ResponseEntity<>(resultSet(selectedRow), httpHeaders, 201);
     }
     public ResponseEntity<HashMap> updatePosts(Post selected, Post updated, HttpHeaders httpHeaders) throws Exception{
         Date now = new Date();
@@ -160,7 +155,8 @@ public class PostDao {
 
 
 
-    private void resultSet(ResultSet selectedRow, HashMap<Integer, HashMap<String, String>> map) throws Exception{
+    private HashMap<Integer, HashMap<String, String>> resultSet(ResultSet selectedRow) throws Exception{
+        HashMap<Integer, HashMap<String, String>> map = new HashMap<>();
         String[] columns = {"post_id", "writer", "email", "title", "content", "created_date", "updated_date"};
         while (selectedRow.next()){
             HashMap<String, String> columnList = new HashMap<>();
@@ -170,5 +166,6 @@ public class PostDao {
             map.put(selectedRow.getInt("post_id"), columnList);
         }
         System.out.println("SELECTED_ROWS -> " + map);
+        return map;
     }
 }

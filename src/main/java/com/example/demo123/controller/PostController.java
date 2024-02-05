@@ -24,11 +24,10 @@ public class PostController {
     public ResponseEntity<HashMap> UploadPost(@RequestParam Map<String, String> params){
         HttpHeaders headers= new HttpHeaders();
         headers.setContentType(new MediaType("application", "json", StandardCharsets.UTF_8));
-
         Post post = new Post();
 
-        Exception[] exceptions = new Exception[4];
 
+        Exception[] exceptions = new Exception[4];
         int len = 0;
         if(!params.containsKey("writer")) {
             exceptions[len] = new IllegalArgumentException("writer must be defined");
@@ -65,37 +64,17 @@ public class PostController {
             }
             return new ResponseEntity<>(map, headers, 400);
         } else {
-            // 구문이 재사용될시 분리하기
-            // key=value 인자의 순서를 알수 없기에 case 문 반복
-            HashMap<String, String> map = new HashMap<>();
+            HashMap<String, String> mapForException = new HashMap<>();
 
-            try {
-                params.forEach((key, value) -> {
-                    switch (key) {
-                        case "writer" ->
-                            post.setWriter(value);
-                        case "title" ->
-                            post.setTitle(value);
-                        case "content" ->
-                            post.setContent(value);
-                        case "email" ->
-                            post.setEmail(value);
-                        default ->
-                            System.out.println("unKnown value");
-                    }
-                });
-            } catch (IllegalArgumentException e) {
-                map.put("IllegalArgumentException", e.getMessage());
-                return new ResponseEntity<>(map, headers, 400);
-            }
+            new setDto().multipurposeDTO(params, post);
             try {
                 return new PostDao().InsertPost(post, headers);
             } catch (SQLException e) {
-                map.put("SqlException", e.getMessage());
+                mapForException.put("SqlException", e.getMessage());
             } catch (Exception e) {
-                map.put("OtherException", e.getMessage());
+                mapForException.put("OtherException", e.getMessage());
             }
-            return new ResponseEntity<>(map, headers, 500);
+            return new ResponseEntity<>(mapForException, headers, 500);
         }
     }
 }

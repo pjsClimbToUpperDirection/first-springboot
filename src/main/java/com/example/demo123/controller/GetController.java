@@ -29,20 +29,9 @@ public class GetController {
         HttpHeaders httpHeaders= new HttpHeaders();
         httpHeaders.setContentType(new MediaType("application", "json", StandardCharsets.UTF_8));
         Post post = new Post();
-        params.forEach((key, value) -> {
-            switch (key) {
-                case "writer" ->
-                    post.setWriter(value);
-                case "title" ->
-                    post.setTitle(value);
-                case "date" ->
-                    post.setCreated_date(value);
-                default ->
-                    System.out.println("unKnown value");
-            }
-        });
-        HashMap<String, String> mapForException = new HashMap<>();
+        new setDto().multipurposeDTO(params, post);
 
+        HashMap<String, String> mapForException = new HashMap<>();
         try {
             if (post.getWriter() == null & post.getTitle() == null & post.getCreated_date() == null)
                 mapForException.put("IllegalArgumentException" ,"define some argument at lease one or more");
