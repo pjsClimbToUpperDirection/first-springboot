@@ -16,8 +16,7 @@ import java.util.Map;
 @RequestMapping("/api/v1/post-api")
 public class PostController {
 
-    public PostController() {
-    }
+    public PostController() {}
 
     // 한번에 하나의 포스트만 업로드 가능
     // 예시 -> http://localhost:8085/api/v1/post-api/uploadPost?email=eerI@gmail.com&content=Aop&writer=me

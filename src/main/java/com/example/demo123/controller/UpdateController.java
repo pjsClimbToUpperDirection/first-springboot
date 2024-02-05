@@ -18,6 +18,7 @@ public class UpdateController {
 
     public UpdateController(){}
 
+    // 4가지 인자를 전부 요구함
     @PatchMapping("/updatePosts")
     public ResponseEntity<HashMap> UpdatePosts(@RequestParam Map<String, String> params){
         HttpHeaders headers = new HttpHeaders();
