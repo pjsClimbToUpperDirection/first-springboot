@@ -18,12 +18,11 @@ import java.util.Map;
 @RequestMapping("/api/v1/get-api")
 public class GetController {
 
-    public GetController(){
-    }
+    public GetController(){}
 
     // 조건에 해당하는 글 전부를 조회
     // 인자가 둘중 하나 혹은 전부 제공되었을 시 dao를 통해 접근, 본 메서드에서 유효성 검사 수행
-    // example: http://localhost:8085/api/v1/get-api/getposts?writer=me&title=TITLE
+    // example: http://localhost:8085/api/v1/get-api/lookUp?writer=me&title=TITLE
     @GetMapping("/lookUp")
     public ResponseEntity<HashMap> lookUpPosts(@RequestParam Map<String, String> params) {
         HttpHeaders httpHeaders= new HttpHeaders();
@@ -54,7 +53,7 @@ public class GetController {
         return new ResponseEntity<>(map, httpHeaders, 500);
     }
 
-    // 특정 날짜의 글을 조회하는 메서드
+    // 특정 날짜에 생성 혹은 수정된 게시글 조회
     @GetMapping("/byDate/{date}")
     public ResponseEntity<HashMap> lookUpPostsByDate(@PathVariable String date) {
         HttpHeaders httpHeaders= new HttpHeaders();

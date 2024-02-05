@@ -20,28 +20,34 @@ public class DeleteController {
     public DeleteController() {
     }
 
+    //  저자, 글 제목을 인자로 받음, 무분별한 삭제를 방지하고자 두 조건 모두가 명확히 주어지지 않았을 시 삭제하지 않음
     @DeleteMapping("/delete/{writer}/{title}")
     public ResponseEntity<HashMap> DeletePost (@PathVariable String writer , @PathVariable String title) { // 반환 타입은 key value 배열의 value 내에 같은 유형의 배열이 중첩된 형식 반환
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(new MediaType("application", "json", StandardCharsets.UTF_8));
         Post post = new Post();
-        HashMap<String, String> map = new HashMap<>();
+        HashMap<String, String> mapForException = new HashMap<>();
 
-        if (writer != null && !writer.isEmpty())
-            post.setWriter(writer);
-        else
-            throw new IllegalArgumentException("writer must be defined");
-        if (title != null && !title.isEmpty())
-            post.setTitle(title);
-        else
-            throw new IllegalArgumentException("title must be defined");
+        try {
+            if (writer != null && !writer.isEmpty())
+                post.setWriter(writer);
+            else
+                throw new IllegalArgumentException("writer must be defined");
+            if (title != null && !title.isEmpty())
+                post.setTitle(title);
+            else
+                throw new IllegalArgumentException("title must be defined");
+        } catch (Exception e) {
+            mapForException.put("IllegalArgumentException", e.getMessage());
+            return new ResponseEntity<>(mapForException, headers, 400);
+        }
         try {
             return new PostDao().DeletePost(post, headers);
         } catch (SQLException e) {
-            map.put("SqlException", e.getMessage());
+            mapForException.put("SqlException", e.getMessage());
         } catch (Exception e) {
-            map.put("OtherException", e.getMessage());
+            mapForException.put("OtherException", e.getMessage());
         }
-        return new ResponseEntity<>(map, headers, 500);
+        return new ResponseEntity<>(mapForException, headers, 500);
     }
 }

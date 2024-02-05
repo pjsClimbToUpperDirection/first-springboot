@@ -20,14 +20,13 @@ public class PostDao {
     AnnotationConfigApplicationContext ctx = new AnnotationConfigApplicationContext(DbConfig.class);
     DataSource dataSource = ctx.getBean("dataSource", DataSource.class);
     public ResponseEntity<HashMap> InsertPost(Post post, HttpHeaders httpHeaders) throws Exception{
-        Connection connection;
+        Date now = new Date();
+        SimpleDateFormat date = new SimpleDateFormat("yy-MM-dd"); // string 타입
 
         HashMap<String, Integer> map = new HashMap<>();
         int insertedRow;
 
-        Date now = new Date();
-        SimpleDateFormat date = new SimpleDateFormat("yy-MM-dd"); // string 타입
-
+        Connection connection;
         connection = dataSource.getConnection();
         PreparedStatement statement = connection.prepareStatement("INSERT INTO posts (writer, email, title, content, created_date) VALUES (?, ?, ?, ?, ?)");
         statement.setString(1, post.getWriter());
@@ -107,6 +106,30 @@ public class PostDao {
 
         resultSet(selectedRow, map);
 
+        connection.close();
+
+        return new ResponseEntity<>(map, httpHeaders, 201);
+    }
+    public ResponseEntity<HashMap> updatePosts(Post selected, Post updated, HttpHeaders httpHeaders) throws Exception{
+        Date now = new Date();
+        SimpleDateFormat date = new SimpleDateFormat("yy-MM-dd"); // string 타입
+
+        Connection connection;
+
+        HashMap<String, Integer> map = new HashMap<>();
+        int UpdatedRow;
+
+        connection = dataSource.getConnection();
+        PreparedStatement statement = connection.prepareStatement("UPDATE posts SET title = ?, content = ?, updated_date = ? WHERE writer = ? AND title = ?");
+        statement.setString(1, updated.getTitle());
+        statement.setString(2, updated.getContent());
+        statement.setString(3, date.format(now));
+        statement.setString(4, selected.getWriter());
+        statement.setString(5, selected.getTitle());
+        UpdatedRow = statement.executeUpdate();
+
+        map.put("UPDATED_rows_number", UpdatedRow);
+        System.out.println("UPDATED_rows_number: " + UpdatedRow);
         connection.close();
 
         return new ResponseEntity<>(map, httpHeaders, 201);
