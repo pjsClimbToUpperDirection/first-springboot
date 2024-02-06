@@ -4,9 +4,9 @@ import com.example.demo123.data.dto.Post;
 
 import java.util.Map;
 
-public class setDto {
-    public setDto(){}
-    public void multipurposeDTO(Map<String, String> params, Post post){
+public class setPostDto {
+    public setPostDto(){}
+    public void multipurposeSetter(Map<String, String> params, Post post){
         params.forEach((key, value) -> {
             switch (key) {
                 case "writer" ->

@@ -20,7 +20,7 @@ public class UpdateController {
 
     // 4가지 인자를 전부 요구함
     @PatchMapping("/updatePosts")
-    public ResponseEntity<HashMap> UpdatePosts(@RequestParam Map<String, String> params){
+    public ResponseEntity<HashMap<String, String>> UpdatePosts(@RequestParam Map<String, String> params){
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(new MediaType("application", "json", StandardCharsets.UTF_8));
         Post SelectedPost = new Post();
@@ -28,8 +28,8 @@ public class UpdateController {
 
         HashMap<String, String> mapForException = new HashMap<>();
         try {
-            new setDto().multipurposeDTO(params, SelectedPost);
-            new setDto().multipurposeDTO(params, UpdatedPost);
+            new setPostDto().multipurposeSetter(params, SelectedPost);
+            new setPostDto().multipurposeSetter(params, UpdatedPost);
 
             if (SelectedPost.getWriter() == null)
                 mapForException.put("IllegalArgumentException", "writer must be defined");

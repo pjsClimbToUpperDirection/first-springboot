@@ -19,16 +19,16 @@ public class DeleteController {
 
     //  '저자, 글 제목, 날짜(생성 혹은 최근 수정일)'을 인자로 받음, 무분별한 삭제를 방지하고자 세 조건 모두가 명확히 주어지지 않았을 시 삭제하지 않음
     @DeleteMapping("/delete")
-    public ResponseEntity<HashMap> DeletePost (@RequestParam Map<String, String> params) {
+    public ResponseEntity<HashMap<String, String>> DeletePost (@RequestParam Map<String, String> params) {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(new MediaType("application", "json", StandardCharsets.UTF_8));
 
         Post post = new Post();
-        new setDto().multipurposeDTO(params, post);
+        new setPostDto().multipurposeSetter(params, post);
 
         HashMap<String, String> mapForException = new HashMap<>();
         try {
-            // 3가지 인자 중 2개 이상이 주어질 시 DELETE 쿼리를 실행하게끔 구현해 보기
+            // todo 3가지 인자 중 2개 이상이 주어질 시 DELETE 쿼리를 실행하게끔 구현해 보기
             if (post.getWriter() == null)
                 mapForException.put("IllegalArgumentException", "writer must be defined");
             if (post.getTitle() == null)

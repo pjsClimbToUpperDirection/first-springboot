@@ -24,9 +24,8 @@ public class PostDao {
     Date now = new Date();
     SimpleDateFormat date = new SimpleDateFormat("yy-MM-dd"); // string 타입
 
-    public ResponseEntity<HashMap> InsertPost(Post post, HttpHeaders httpHeaders) throws Exception{
-        HashMap<String, Integer> map = new HashMap<>();
-        int insertedRow;
+    public ResponseEntity<HashMap<String, String>> InsertPost(Post post, HttpHeaders httpHeaders) throws Exception{
+        HashMap<String, String> map = new HashMap<>();
 
         Connection connection;
         connection = dataSource.getConnection();
@@ -36,21 +35,19 @@ public class PostDao {
         statement.setString(3, post.getTitle());
         statement.setString(4, post.getContent());
         statement.setString(5, date.format(now));
-        insertedRow = statement.executeUpdate();
+        int insertedRow = statement.executeUpdate();
 
-        map.put("INSERTED_rows_number", insertedRow);
+        map.put("INSERTED_rows_number", Integer.valueOf(insertedRow).toString());
         System.out.println("INSERTED_rows_number: " + insertedRow);
         connection.close();
 
         return new ResponseEntity<>(map, httpHeaders, 201);
     }
-    public ResponseEntity<HashMap> lookUpPosts(Post post, HttpHeaders httpHeaders) throws Exception {
+    // 조회 영역이므로 유일하게 반환 타입이 다름
+    public ResponseEntity<ArrayList<HashMap<String, String>>> lookUpPosts(Post post, HttpHeaders httpHeaders) throws Exception {
         Connection connection;
-
-        ResultSet selectedRow;
-
-        PreparedStatement statement;
         connection = dataSource.getConnection();
+        PreparedStatement statement;
 
         if (post.getWriter() != null & post.getTitle() != null){
             if (post.getCreated_date() != null) {
@@ -95,19 +92,20 @@ public class PostDao {
             statement.setString(1, post.getCreated_date());
             statement.setString(2, post.getCreated_date());
         }
-        selectedRow = statement.executeQuery();
+
+        ResultSet selectedRow = statement.executeQuery();
+        ArrayList<HashMap<String, String>> selectedList = resultSet(selectedRow);
         connection.close();
 
-        return new ResponseEntity<>(resultSet(selectedRow), httpHeaders, 201);
+        return new ResponseEntity<>(selectedList, httpHeaders, 201); // resultSet 반환 유형: HashMap<Integer, HashMap<String, String>>
     }
-    public ResponseEntity<HashMap> updatePosts(Post selected, Post updated, HttpHeaders httpHeaders) throws Exception{
+    public ResponseEntity<HashMap<String, String>> updatePosts(Post selected, Post updated, HttpHeaders httpHeaders) throws Exception{
         Date now = new Date();
         SimpleDateFormat date = new SimpleDateFormat("yy-MM-dd"); // string 타입
 
         Connection connection;
 
-        HashMap<String, Integer> map = new HashMap<>();
-        int UpdatedRow;
+        HashMap<String, String> map = new HashMap<>();
 
         connection = dataSource.getConnection();
         PreparedStatement statement = connection.prepareStatement("UPDATE posts SET title = ?, content = ?, updated_date = ? WHERE writer = ? AND title = ?");
@@ -116,19 +114,18 @@ public class PostDao {
         statement.setString(3, date.format(now));
         statement.setString(4, selected.getWriter());
         statement.setString(5, selected.getTitle());
-        UpdatedRow = statement.executeUpdate();
+        int updatedRow = statement.executeUpdate();
 
-        map.put("UPDATED_rows_number", UpdatedRow);
-        System.out.println("UPDATED_rows_number: " + UpdatedRow);
+        map.put("UPDATED_rows_number", Integer.valueOf(updatedRow).toString());
+        System.out.println("UPDATED_rows_number: " + updatedRow);
         connection.close();
 
         return new ResponseEntity<>(map, httpHeaders, 201);
     }
-    public ResponseEntity<HashMap> DeletePost(Post post, HttpHeaders httpHeaders) throws Exception {
+    public ResponseEntity<HashMap<String, String>> DeletePost(Post post, HttpHeaders httpHeaders) throws Exception {
         Connection connection;
 
-        HashMap<String, Integer> map = new HashMap<>();
-        int DeletedRow;
+        HashMap<String, String> map = new HashMap<>();
 
         PreparedStatement statement;
         connection = dataSource.getConnection();
@@ -144,10 +141,10 @@ public class PostDao {
             statement.setString(3, post.getCreated_date());
             statement.setString(4, post.getCreated_date());
         }
-        DeletedRow = statement.executeUpdate();
+        int deletedRow = statement.executeUpdate();
 
-        map.put("DELETED_rows_number", DeletedRow);
-        System.out.println("DELETED_rows_number: " + DeletedRow);
+        map.put("DELETED_rows_number", Integer.valueOf(deletedRow).toString());
+        System.out.println("DELETED_rows_number: " + deletedRow);
         connection.close();
 
         return new ResponseEntity<>(map, httpHeaders, 201);
@@ -155,17 +152,17 @@ public class PostDao {
 
 
 
-    private HashMap<Integer, HashMap<String, String>> resultSet(ResultSet selectedRow) throws Exception{
-        HashMap<Integer, HashMap<String, String>> map = new HashMap<>();
+    private ArrayList<HashMap<String, String>> resultSet(ResultSet selectedRow) throws Exception{
         String[] columns = {"post_id", "writer", "email", "title", "content", "created_date", "updated_date"};
+        ArrayList<HashMap<String, String>> rowList = new ArrayList<>();
         while (selectedRow.next()){
             HashMap<String, String> columnList = new HashMap<>();
             for (String column : columns) {
                 columnList.put(column, selectedRow.getString(column));
             }
-            map.put(selectedRow.getInt("post_id"), columnList);
+            rowList.add(columnList);
         }
-        System.out.println("SELECTED_ROWS -> " + map);
-        return map;
+        System.out.println("SELECTED_ROWS -> " + rowList);
+        return rowList;
     }
 }

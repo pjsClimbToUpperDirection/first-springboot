@@ -1,7 +1,9 @@
 package com.example.demo123.controller;
 
 import com.example.demo123.data.dao.PostDao;
+import com.example.demo123.data.dao.UserDao;
 import com.example.demo123.data.dto.Post;
+import com.example.demo123.data.dto.User;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -21,7 +23,7 @@ public class PostController {
     // 한번에 하나의 포스트만 업로드 가능
     // 예시 -> http://localhost:8085/api/v1/post-api/uploadPost?email=eerI@gmail.com&content=Aop&writer=me
     @PostMapping("/uploadPost")
-    public ResponseEntity<HashMap> UploadPost(@RequestParam Map<String, String> params){
+    public ResponseEntity<HashMap<String, String>> UploadPost(@RequestParam Map<String, String> params){
         HttpHeaders headers= new HttpHeaders();
         headers.setContentType(new MediaType("application", "json", StandardCharsets.UTF_8));
         Post post = new Post();
@@ -66,7 +68,7 @@ public class PostController {
         } else {
             HashMap<String, String> mapForException = new HashMap<>();
 
-            new setDto().multipurposeDTO(params, post);
+            new setPostDto().multipurposeSetter(params, post);
             try {
                 return new PostDao().InsertPost(post, headers);
             } catch (SQLException e) {
@@ -76,5 +78,28 @@ public class PostController {
             }
             return new ResponseEntity<>(mapForException, headers, 500);
         }
+    }
+
+    @PostMapping("/signup")
+    public ResponseEntity<HashMap<String, String>> createUser(@RequestBody User subscriber) {
+        HttpHeaders headers= new HttpHeaders();
+        headers.setContentType(new MediaType("application", "json", StandardCharsets.UTF_8));
+        User user = new User();
+
+        HashMap<String, String> mapForException = new HashMap<>();
+        // todo password 는 front 영역에서 암호화 처리한 다음 전송된다
+        if (subscriber.getPassword() == null){
+            mapForException.put("creating a account is failed", "password is required");
+            return new ResponseEntity<>(mapForException, headers, 400);
+        }
+        try {
+            if (new UserDao().confirmForUsable(subscriber))
+                return new ResponseEntity<>(new UserDao().signUp(subscriber), headers, 201);
+        } catch (SQLException e) {
+            mapForException.put("SqlException", e.getMessage());
+        } catch (Exception e) {
+            mapForException.put("Exception", e.getMessage());
+        }
+        return new ResponseEntity<>(mapForException, headers, 500);
     }
 }

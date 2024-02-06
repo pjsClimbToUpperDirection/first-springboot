@@ -5,13 +5,12 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 
-// dto is on duty for validation
 @Getter
 @Setter
 @NoArgsConstructor
 public class Post {
-
-    private String id;
+    // 각각의 컨트롤러에서 데이터를 전송하는 경우에 따라 값이 할당되는 필드가 제각각이므로 null 검증이 생략됨
+    private Integer post_id;
     private String writer;
     private String title;
     private String content;

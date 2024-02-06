@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -22,15 +23,16 @@ public class GetController {
 
 
     // 조건에 해당하는 글 전부를 조회 (저자, 제목, 생성 혹은 수정일)
-    // 인자가 둘중 하나 혹은 전부 제공되었을 시 dao를 통해 접근, 본 메서드에서 유효성 검사 수행
+    // 게시글 목록을 반환하므로 반환 유형이 조금 다름 (HashMap 이 arrayList 배열의 원소로 전달됨)
     // example: http://localhost:8085/api/v1/get-api/lookUp?writer=me&title=TITLE&date=24-02-05
     @GetMapping("/lookUp")
-    public ResponseEntity<HashMap> lookUpPosts(@RequestParam Map<String, String> params) {
+    public ResponseEntity<ArrayList<HashMap<String, String>>> lookUpPosts(@RequestParam Map<String, String> params) {
         HttpHeaders httpHeaders= new HttpHeaders();
         httpHeaders.setContentType(new MediaType("application", "json", StandardCharsets.UTF_8));
         Post post = new Post();
-        new setDto().multipurposeDTO(params, post);
+        new setPostDto().multipurposeSetter(params, post);
 
+        ArrayList<HashMap<String, String>> rowList = new ArrayList<>();
         HashMap<String, String> mapForException = new HashMap<>();
         try {
             if (post.getWriter() == null & post.getTitle() == null & post.getCreated_date() == null)
@@ -38,7 +40,8 @@ public class GetController {
             if (!mapForException.isEmpty())
                 throw new IllegalArgumentException("triggered this try-catch logic");
         } catch (Exception e) {
-            return new ResponseEntity<>(mapForException, httpHeaders, 400);
+            rowList.add(mapForException);
+            return new ResponseEntity<>(rowList, httpHeaders, 400);
         }
 
         try {
@@ -48,6 +51,7 @@ public class GetController {
         } catch (Exception e) {
             mapForException.put("OtherException", e.getMessage());
         }
-        return new ResponseEntity<>(mapForException, httpHeaders, 500);
+        rowList.add(mapForException);
+        return new ResponseEntity<>(rowList, httpHeaders, 500);
     }
 }
