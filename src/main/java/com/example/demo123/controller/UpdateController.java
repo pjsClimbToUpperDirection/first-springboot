@@ -1,7 +1,9 @@
 package com.example.demo123.controller;
 
 import com.example.demo123.data.dao.PostDao;
+import com.example.demo123.data.dao.UserDao;
 import com.example.demo123.data.dto.Post;
+import com.example.demo123.data.dto.User;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.http.HttpHeaders;
@@ -27,9 +29,11 @@ public class UpdateController {
 
         HashMap<String, String> mapForException = new HashMap<>();
 
+        // 역직렬화를 위한 객체 선언;
         ObjectMapper mapper = new ObjectMapper();
         Post selected;
         Post updated;
+
         try {
             selected = mapper.treeToValue(updateObj.get("selected"), Post.class);
             updated =  mapper.treeToValue(updateObj.get("updated"), Post.class);
@@ -54,7 +58,8 @@ public class UpdateController {
             return new ResponseEntity<>(mapForException, headers, 500);
         }
         try {
-            return new PostDao().updatePosts(selected, updated, headers);
+            new PostDao().updatePosts(selected, updated);
+            return new ResponseEntity<>(null, headers, 200);
         } catch (SQLException e) {
             mapForException.put("SqlException", e.getMessage());
         } catch (Exception e) {
@@ -62,4 +67,35 @@ public class UpdateController {
         }
         return new ResponseEntity<>(mapForException, headers, 500);
     }
+
+    @PatchMapping("/updateUserInfo")
+    public ResponseEntity<HashMap<String, String>> ChangeUserInfo(@RequestBody User user){
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(new MediaType("application", "json", StandardCharsets.UTF_8));
+
+        HashMap<String, String> mapForException = new HashMap<>();
+
+        try {
+            if (user.getUser_name() == null)
+                mapForException.put("IllegalArgumentException-user_name", "username must be defined");
+            if (user.getEmail() == null)
+                mapForException.put("IllegalArgumentException-Email", "which is updated as a new email must be defined");
+            if (user.getPassword() == null)
+                mapForException.put("IllegalArgumentException-password", "which is updated as a new password must be defined");
+            if (!mapForException.isEmpty())
+                throw new IllegalArgumentException("triggered this try-catch logic");
+        } catch (Exception e) {
+            return new ResponseEntity<>(mapForException, headers, 400);
+        }
+        try {
+            new UserDao().ChangeUserInfo(user);
+            return new ResponseEntity<>(null, headers, 200);
+        } catch (SQLException e) {
+            mapForException.put("SqlException", e.getMessage());
+        } catch (Exception e) {
+            mapForException.put("OtherException", e.getMessage());
+        }
+        return new ResponseEntity<>(mapForException, headers, 500);
+    }
+
 }

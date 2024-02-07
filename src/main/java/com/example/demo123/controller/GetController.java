@@ -21,9 +21,7 @@ public class GetController {
     public GetController(){}
 
 
-    // 조건에 해당하는 글 전부를 조회 (저자, 제목, 생성 혹은 수정일)
-    // 게시글 목록을 반환하므로 반환 유형이 조금 다름 (HashMap 이 arrayList 배열의 원소로 전달됨)
-    // example: http://localhost:8085/api/v1/get-api/lookUp?writer=me&title=TITLE&date=24-02-05
+    // 조건에 해당하는 글 전부를 조회 (저자, 제목, 생성 혹은 수정일), 이후 해당하는 게시글 목록을 반환
     @GetMapping("/lookUp")
     public ResponseEntity<ArrayList<HashMap<String, String>>> lookUpPosts(@RequestBody Post post) {
         HttpHeaders httpHeaders= new HttpHeaders();
@@ -42,7 +40,7 @@ public class GetController {
         }
 
         try {
-            return new PostDao().lookUpPosts(post, httpHeaders);
+            return new ResponseEntity<>(new PostDao().lookUpPosts(post), httpHeaders, 200);
         } catch (SQLException e) {
             mapForException.put("SqlException", e.getMessage());
         } catch (Exception e) {

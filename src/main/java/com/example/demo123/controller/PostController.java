@@ -35,6 +35,8 @@ public class PostController {
         }
         if (post.getEmail() == null) {
             mapForException.put("IllegalArgumentException-email","email must be defined");
+        } else if (!post.getEmail().matches("^[A-Za-z0-9+_.-]+@(.+)$")){ // @ 앞에 대소문자 알파벳, 0~9까지의 숫자, 언더바,점,하이픈 허용됨, 뒤로는 하나 이상의 어떠한 문자가 존재해야 함
+            mapForException.put("IllegalArgumentException-email", "observe the email Format!");
         }
         if (post.getTitle() == null) {
             mapForException.put("IllegalArgumentException-title","title must be defined");
@@ -44,7 +46,8 @@ public class PostController {
             return new ResponseEntity<>(mapForException, headers, 400);
 
         try {
-            return new PostDao().InsertPost(post, headers);
+            new PostDao().InsertPost(post);
+            return new ResponseEntity<>(null, headers, 201);
         } catch (SQLException e) {
             mapForException.put("SqlException", e.getMessage());
         } catch (Exception e) {
@@ -65,8 +68,13 @@ public class PostController {
             return new ResponseEntity<>(mapForException, headers, 400);
         }
         try {
-            if (new UserDao().confirmForUsable(subscriber))
-                return new ResponseEntity<>(new UserDao().signUp(subscriber), headers, 201);
+            if (new UserDao().confirmForUsable(subscriber)){
+                new UserDao().signUp(subscriber);
+                return new ResponseEntity<>(null, headers, 201);
+            } else {
+                mapForException.put("subscribing is failed", "this user_name is already being used");
+                return new ResponseEntity<>(mapForException, headers, 400);
+            }
         } catch (SQLException e) {
             mapForException.put("SqlException", e.getMessage());
         } catch (Exception e) {

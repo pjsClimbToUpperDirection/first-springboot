@@ -3,8 +3,6 @@ package com.example.demo123.data.dao;
 import com.example.demo123.config.DbConfig;
 import com.example.demo123.data.dto.Post;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.ResponseEntity;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
@@ -24,9 +22,7 @@ public class PostDao {
     Date now = new Date();
     SimpleDateFormat date = new SimpleDateFormat("yy-MM-dd"); // string 타입
 
-    public ResponseEntity<HashMap<String, String>> InsertPost(Post post, HttpHeaders httpHeaders) throws Exception{
-        HashMap<String, String> map = new HashMap<>();
-
+    public void InsertPost(Post post) throws Exception{
         Connection connection;
         connection = dataSource.getConnection();
         PreparedStatement statement = connection.prepareStatement("INSERT INTO posts (writer, email, title, content, created_date) VALUES (?, ?, ?, ?, ?)");
@@ -37,14 +33,12 @@ public class PostDao {
         statement.setString(5, date.format(now));
         int insertedRow = statement.executeUpdate();
 
-        map.put("INSERTED_rows_number", Integer.valueOf(insertedRow).toString());
         System.out.println("INSERTED_rows_number: " + insertedRow);
         connection.close();
-
-        return new ResponseEntity<>(map, httpHeaders, 201);
     }
-    // 조회 영역이므로 유일하게 반환 타입이 다름
-    public ResponseEntity<ArrayList<HashMap<String, String>>> lookUpPosts(Post post, HttpHeaders httpHeaders) throws Exception {
+
+    // 조회 영역이므로 유일하게 본문을 반환
+    public ArrayList<HashMap<String, String>> lookUpPosts(Post post) throws Exception {
         Connection connection;
         connection = dataSource.getConnection();
         PreparedStatement statement;
@@ -97,16 +91,12 @@ public class PostDao {
         ArrayList<HashMap<String, String>> selectedList = resultSet(selectedRow);
         connection.close();
 
-        return new ResponseEntity<>(selectedList, httpHeaders, 201); // resultSet 반환 유형: HashMap<Integer, HashMap<String, String>>
+        return selectedList;
     }
-    public ResponseEntity<HashMap<String, String>> updatePosts(Post selected, Post updated, HttpHeaders httpHeaders) throws Exception{
-        Date now = new Date();
-        SimpleDateFormat date = new SimpleDateFormat("yy-MM-dd"); // string 타입
 
+
+    public void updatePosts(Post selected, Post updated) throws Exception{
         Connection connection;
-
-        HashMap<String, String> map = new HashMap<>();
-
         connection = dataSource.getConnection();
         PreparedStatement statement = connection.prepareStatement("UPDATE posts SET title = ?, content = ?, updated_date = ? WHERE writer = ? AND title = ?");
         statement.setString(1, updated.getTitle());
@@ -116,19 +106,12 @@ public class PostDao {
         statement.setString(5, selected.getTitle());
         int updatedRow = statement.executeUpdate();
 
-        map.put("UPDATED_rows_number", Integer.valueOf(updatedRow).toString());
         System.out.println("UPDATED_rows_number: " + updatedRow);
         connection.close();
-
-        return new ResponseEntity<>(map, httpHeaders, 201);
     }
-    public ResponseEntity<HashMap<String, String>> DeletePost(Post post, HttpHeaders httpHeaders) throws Exception {
-        Connection connection;
-
-        HashMap<String, String> map = new HashMap<>();
-
+    public void DeletePost(Post post) throws Exception {
         PreparedStatement statement;
-        connection = dataSource.getConnection();
+        Connection connection = dataSource.getConnection();
         String defaultStatement = "DELETE FROM posts WHERE ";
         String StatementAsResult;
         if (post.getWriter() != null & post.getTitle() != null) {
@@ -168,12 +151,8 @@ public class PostDao {
 
 
         int deletedRow = statement.executeUpdate();
-
-        map.put("DELETED_rows_number", Integer.valueOf(deletedRow).toString());
         System.out.println("DELETED_rows_number: " + deletedRow);
         connection.close();
-
-        return new ResponseEntity<>(map, httpHeaders, 201);
     }
 
 

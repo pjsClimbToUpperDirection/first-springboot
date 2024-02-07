@@ -39,7 +39,8 @@ public class DeleteController {
         }
 
         try {
-            return new PostDao().DeletePost(post, headers);
+            new PostDao().DeletePost(post);
+            return new ResponseEntity<>(null, headers, 204);
         } catch (SQLException e) {
             mapForException.put("SqlException", e.getMessage());
         } catch (Exception e) {
@@ -64,7 +65,8 @@ public class DeleteController {
         }
 
         try {
-            return new UserDao().cancellation(user);
+            new UserDao().cancellation(user);
+            return new ResponseEntity<>(null, headers, 200);
         } catch (SQLException e) {
             mapForException.put("SqlException", e.getMessage());
         } catch (Exception e) {
