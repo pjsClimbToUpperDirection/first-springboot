@@ -12,7 +12,6 @@ import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Map;
 
 // org.springframework.web.bind.annotation
 @RestController
@@ -26,11 +25,9 @@ public class GetController {
     // 게시글 목록을 반환하므로 반환 유형이 조금 다름 (HashMap 이 arrayList 배열의 원소로 전달됨)
     // example: http://localhost:8085/api/v1/get-api/lookUp?writer=me&title=TITLE&date=24-02-05
     @GetMapping("/lookUp")
-    public ResponseEntity<ArrayList<HashMap<String, String>>> lookUpPosts(@RequestParam Map<String, String> params) {
+    public ResponseEntity<ArrayList<HashMap<String, String>>> lookUpPosts(@RequestBody Post post) {
         HttpHeaders httpHeaders= new HttpHeaders();
         httpHeaders.setContentType(new MediaType("application", "json", StandardCharsets.UTF_8));
-        Post post = new Post();
-        new setPostDto().multipurposeSetter(params, post);
 
         ArrayList<HashMap<String, String>> rowList = new ArrayList<>();
         HashMap<String, String> mapForException = new HashMap<>();

@@ -129,18 +129,44 @@ public class PostDao {
 
         PreparedStatement statement;
         connection = dataSource.getConnection();
-        if(post.getCreated_date() == null) {
-            statement = connection.prepareStatement("DELETE FROM posts WHERE writer = ? AND title = ?");
-            statement.setString(1, post.getWriter());
-            statement.setString(2, post.getTitle());
-        }
-        else {
-            statement = connection.prepareStatement("DELETE FROM posts WHERE writer = ? AND title = ? AND ((created_date = ? AND updated_date IS NULL) OR updated_date = ?)");
-            statement.setString(1, post.getWriter());
-            statement.setString(2, post.getTitle());
-            statement.setString(3, post.getCreated_date());
-            statement.setString(4, post.getCreated_date());
-        }
+        String defaultStatement = "DELETE FROM posts WHERE ";
+        String StatementAsResult;
+        if (post.getWriter() != null & post.getTitle() != null) {
+            if (post.getCreated_date() != null) {
+                StatementAsResult = defaultStatement + "writer = ? AND title = ? AND ((created_date = ? AND updated_date IS NULL) OR updated_date = ?)";
+                statement = connection.prepareStatement(StatementAsResult);
+                statement.setString(1, post.getWriter());
+                statement.setString(2, post.getTitle());
+                statement.setString(3, post.getCreated_date());
+                statement.setString(4, post.getCreated_date());
+            } else {
+                StatementAsResult = defaultStatement + "writer = ? AND title = ?";
+                statement = connection.prepareStatement(StatementAsResult);
+                statement.setString(1, post.getWriter());
+                statement.setString(2, post.getTitle());
+            }
+        } else if (post.getWriter() != null) {
+            if (post.getCreated_date() != null) {
+                StatementAsResult = defaultStatement + "writer = ? AND ((created_date = ? AND updated_date IS NULL) OR updated_date = ?)";
+                statement = connection.prepareStatement(StatementAsResult);
+                statement.setString(1, post.getWriter());
+                statement.setString(2, post.getCreated_date());
+                statement.setString(3, post.getCreated_date());
+            } else
+                throw new IllegalArgumentException("argument must be two more");
+        } else if (post.getTitle() != null) {
+            if (post.getCreated_date() != null) {
+                StatementAsResult = defaultStatement + "title = ? AND ((created_date = ? AND updated_date IS NULL) OR updated_date = ?)";
+                statement = connection.prepareStatement(StatementAsResult);
+                statement.setString(1, post.getTitle());
+                statement.setString(2, post.getCreated_date());
+                statement.setString(3, post.getCreated_date());
+            } else
+                throw new IllegalArgumentException("argument must be two more");
+        } else
+            throw new Exception("failed at construction of the SQL Query");
+
+
         int deletedRow = statement.executeUpdate();
 
         map.put("DELETED_rows_number", Integer.valueOf(deletedRow).toString());

@@ -37,4 +37,16 @@ public class UserDao {
         System.out.println("INSERTED_rows_number: " + insertedRow);
         return map;
     }
+
+    public HashMap<String, String> cancellation(User reSigner) throws Exception {
+        HashMap<String, String> map = new HashMap<>();
+
+        Connection connection = dataSource.getConnection();
+        PreparedStatement statement = connection.prepareStatement("DELETE FROM users WHERE user_name = ?");
+        statement.setString(1, reSigner.getUser_name());
+        int insertedRow = statement.executeUpdate();
+        map.put("DELETED_rows_number", Integer.valueOf(insertedRow).toString());
+        System.out.println("DELETED_rows_number: " + insertedRow);
+        return map;
+    }
 }
