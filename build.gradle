@@ -35,6 +35,14 @@ dependencies { // 라이브러리 사용을 위한 의존성 설정
 
 	// spring JDBC
 	implementation 'org.springframework.data:spring-data-jdbc'
+
+	// spring security
+	implementation 'org.springframework.boot:spring-boot-starter-security'
+
+	// jwt (jjwt github readme)
+	implementation 'io.jsonwebtoken:jjwt-api:0.12.5'
+	runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.5'
+	runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.5'
 }
 
 tasks.named('test') {
