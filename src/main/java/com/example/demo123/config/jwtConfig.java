@@ -46,6 +46,6 @@ public class jwtConfig {
     @Bean
     public AuthenticationManager authenticationManager() {
         // todo 인증 성공시 완전히 구성된 Authentication 객체 반환
-        return authentication -> jwtRequestFilter.doFilterInternal();
+        return authentication -> null;
     }
 }

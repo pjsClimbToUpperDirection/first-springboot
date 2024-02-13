@@ -37,10 +37,10 @@ public class jwtRequestFilter extends OncePerRequestFilter {
 
         if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
             jwt = authorizationHeader.substring(7);
-            username = jwtUtil.extractUsername(jwt);
+            username = jwtUtil.extractUsername(jwt); // jwt 에서 사용자 이름 추출
         }
 
-        // 토큰에서 사용자 이름을 추출하였으나 아직 인증되지 않은 경우
+        // jwt 토큰에서 사용자 이름을 추출하였으나 아직 인증되지 않은 경우
         if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
 
             UserDetails userDetails = this.userDetailsService.loadUserByUsername(username);

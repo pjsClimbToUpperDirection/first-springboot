@@ -47,12 +47,16 @@ public class AuthenticationController {
             );
         } catch (BadCredentialsException e) {
             map.put("BadCredentialsException", e.getMessage());
+            return new ResponseEntity<>(map, headers, 400);
         } catch (AuthenticationException e) {
             map.put("AuthenticationException", e.getMessage());
+            return new ResponseEntity<>(map, headers, 500);
         } catch (Exception e) {
             map.put("Exception", e.getMessage());
+            return new ResponseEntity<>(map, headers, 500);
         }
 
+        // id, pw 유효할 시 사용자 정보를 가져옴
         final UserDetails userDetails = userDetailsService.loadUserByUsername(authenticationRequest.getUsername());
 
         map.put("jwt", jwtUtil.generateToken(null, userDetails));
