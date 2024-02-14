@@ -1,5 +1,6 @@
 package com.example.demo123.config;
 
+import com.example.demo123.service.CustomAuthenticationManager;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -46,6 +47,6 @@ public class jwtConfig {
     @Bean
     public AuthenticationManager authenticationManager() {
         // todo 인증 성공시 완전히 구성된 Authentication 객체 반환
-        return authentication -> null;
+        return new CustomAuthenticationManager(userDetailsService);
     }
 }

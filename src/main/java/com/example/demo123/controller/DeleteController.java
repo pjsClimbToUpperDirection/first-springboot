@@ -49,7 +49,7 @@ public class DeleteController {
         return new ResponseEntity<>(mapForException, headers, 500);
     }
 
-    @DeleteMapping("/cancellation")
+    /*@DeleteMapping("/cancellation")
     public ResponseEntity<HashMap<String, String>> Cancellation (@RequestBody User user) {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(new MediaType("application", "json", StandardCharsets.UTF_8));
@@ -73,5 +73,5 @@ public class DeleteController {
             mapForException.put("OtherException", e.getMessage());
         }
         return new ResponseEntity<>(mapForException, headers, 500);
-    }
+    } */
 }

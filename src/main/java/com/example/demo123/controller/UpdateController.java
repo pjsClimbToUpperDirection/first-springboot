@@ -68,7 +68,7 @@ public class UpdateController {
         return new ResponseEntity<>(mapForException, headers, 500);
     }
 
-    @PatchMapping("/updateUserInfo")
+    /*@PatchMapping("/updateUserInfo")
     public ResponseEntity<HashMap<String, String>> ChangeUserInfo(@RequestBody User user){
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(new MediaType("application", "json", StandardCharsets.UTF_8));
@@ -96,6 +96,6 @@ public class UpdateController {
             mapForException.put("OtherException", e.getMessage());
         }
         return new ResponseEntity<>(mapForException, headers, 500);
-    }
+    } */
 
 }

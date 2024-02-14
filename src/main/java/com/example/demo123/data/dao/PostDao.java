@@ -157,8 +157,9 @@ public class PostDao {
 
 
 
+    // todo 값을 변환하는 역할은 서비스 레이어로 이동시킬 것
     private ArrayList<HashMap<String, String>> resultSet(ResultSet selectedRow) throws Exception{
-        String[] columns = {"post_id", "writer", "email", "title", "content", "created_date", "updated_date"};
+        String[] columns = {"id", "username", "email", "password", "content", "created_date", "updated_date"};
         ArrayList<HashMap<String, String>> rowList = new ArrayList<>();
         while (selectedRow.next()){
             HashMap<String, String> columnList = new HashMap<>();

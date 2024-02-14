@@ -56,7 +56,7 @@ public class PostController {
         return new ResponseEntity<>(mapForException, headers, 500);
     }
 
-    @PostMapping("/signup")
+    /*@PostMapping("/signup")
     public ResponseEntity<HashMap<String, String>> createUser(@RequestBody User subscriber) {
         HttpHeaders headers= new HttpHeaders();
         headers.setContentType(new MediaType("application", "json", StandardCharsets.UTF_8));
@@ -81,5 +81,5 @@ public class PostController {
             mapForException.put("Exception", e.getMessage());
         }
         return new ResponseEntity<>(mapForException, headers, 500);
-    }
+    }*/
 }
