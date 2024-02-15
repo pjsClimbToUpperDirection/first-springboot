@@ -18,8 +18,8 @@ import java.util.function.Function;
 @Service
 public class jwtUtil {
     // String 타입의 비밀 키를 보유하고 있을 시 SecretKey 인스턴스로 변환하여 signWith 메서드의 인자로 사용할수 있도록 해야 한다.
-    @Value("${jwt.secretKey}")
-    private final String secret_Key = ""; // 추후 사용시 이상없이 프로퍼티 값을 가져오는지 확인
+    //@Value("${jwt.secretKey}")
+    private final String secret_Key = "secretkeysecretkeysecretkeysecretkeysecretkeysecretkeysecretkey"; // 추후 사용시 이상없이 프로퍼티 값을 가져오는지 확인
 
     // if your secret key is A Base64-encoded string
     // https://github.com/jwtk/jjwt/blob/master/api/src/main/java/io/jsonwebtoken/io/ExceptionPropagatingDecoder.java

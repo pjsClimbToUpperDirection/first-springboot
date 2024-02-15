@@ -1,13 +1,16 @@
 package com.example.demo123.data.dto;
 
-import lombok.AllArgsConstructor;
+import lombok.Builder;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
 
 // 인증 시 사용되는 dto
 // 불변 객체
+@Builder
 public class CustomUserDetails implements UserDetails {
     private String id;
     private String username; // username 은 중복되는 값이 없도록 한다
@@ -15,12 +18,13 @@ public class CustomUserDetails implements UserDetails {
     private String email;
     private boolean emailVerified;
     private boolean locked;
-    private Collection<? extends GrantedAuthority> authorities;
+    private String role; // u, su
 
-    // 해당 사용자의 권한 목록
-    // todo 별도로 오버라이드 할 것
     @Override
-    public Collection<? extends GrantedAuthority> getAuthorities() {
+    public Set<GrantedAuthority> getAuthorities() {
+        Set<GrantedAuthority> authorities = new HashSet<>();
+        // 인스턴스의 인자로 Authentication 객체에 부여된 권한을 나타내는 값을 적용, 반환 타입을 맞추고자 길이가 1인 형식적 set 인스턴스 생성
+        authorities.add(new SimpleGrantedAuthority(this.role));
         return authorities;
     }
 

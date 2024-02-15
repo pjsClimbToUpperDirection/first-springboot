@@ -35,7 +35,7 @@ public class AuthenticationController {
         this.jwtUtil = jwtUtil;
     }
 
-    @PostMapping("/authenticate")
+    @PostMapping("/authentication")
     public ResponseEntity<HashMap<String, String>> createAuthenticationToken(@RequestBody AuthenticationRequest authenticationRequest) {
         headers.setContentType(new MediaType("application", "json", StandardCharsets.UTF_8));
         HashMap<String, String> map = new HashMap<>();

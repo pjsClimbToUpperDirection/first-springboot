@@ -36,7 +36,7 @@ dependencies { // 라이브러리 사용을 위한 의존성 설정
 	// spring JDBC
 	implementation 'org.springframework.data:spring-data-jdbc'
 
-	// spring security
+	// spring security(boot)
 	implementation 'org.springframework.boot:spring-boot-starter-security'
 
 	// jwt (jjwt github readme)
