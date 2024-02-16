@@ -18,13 +18,9 @@ import static org.springframework.security.config.Customizer.withDefaults;
 @Configuration
 @EnableWebSecurity
 public class jwtConfig {
-
-    // todo 추후 설정을 구성할 시 사용될 필드들
-    private final UserDetailsService userDetailsService;
     private final jwtRequestFilter jwtRequestFilter;
 
-    public jwtConfig(UserDetailsService userDetailsService, jwtRequestFilter jwtRequestFilter) {
-        this.userDetailsService = userDetailsService;
+    public jwtConfig(jwtRequestFilter jwtRequestFilter) {
         this.jwtRequestFilter = jwtRequestFilter;
     }
 
@@ -39,13 +35,6 @@ public class jwtConfig {
     @Bean
     public WebSecurityCustomizer webSecurityCustomizer() {
         // ignoring() 메서드를 사용할 경우 spring security 의 전 기능을 사용할수 없다
-        return (web) -> web.ignoring().requestMatchers("/authenticate");
-    }
-
-    // https://docs.spring.io/spring-security/site/docs/current/api/org/springframework/security/authentication/AuthenticationManager.html
-    @Bean
-    public AuthenticationManager authenticationManager() {
-        // todo 인증 성공시 완전히 구성된 Authentication 객체 반환
-        return new CustomAuthenticationManager(userDetailsService);
+        return (web) -> web.ignoring().requestMatchers("/api/v1/auth-api/issue");
     }
 }

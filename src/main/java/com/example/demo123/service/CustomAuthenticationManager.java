@@ -8,8 +8,10 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.stereotype.Service;
 
 
+@Service
 public class CustomAuthenticationManager implements AuthenticationManager {
     private final UserDetailsService userDetailsService; // userDetailsServiceImpl
 
@@ -28,7 +30,7 @@ public class CustomAuthenticationManager implements AuthenticationManager {
         try {
             userDetails = userDetailsService.loadUserByUsername(username);
         } catch (UsernameNotFoundException e) {
-            throw new UsernameNotFoundException("User not found");
+            throw new UsernameNotFoundException(e.getMessage());
         }
 
         // 사용자 정보(암호)를 확인하여 인증 수행

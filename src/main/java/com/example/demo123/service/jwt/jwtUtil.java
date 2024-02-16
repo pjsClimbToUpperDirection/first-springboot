@@ -4,7 +4,6 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.lang.Nullable;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
@@ -38,7 +37,7 @@ public class jwtUtil {
     // 토큰에서 claim 추출 후 resolve
     private  <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
         final Claims claims = extractAllClaims(token);
-        return claimsResolver.apply(claims); // 두번째 인자로 받은 함수의 인자로 추출한 claim 적용
+        return claimsResolver.apply(claims); // claim 에 '해당 함수' 적용
     }
 
     // JWT 토큰이 포함된 요청이 들어올 시 토큰 검증을 위한 claim 의 본문을 추출하는 함수

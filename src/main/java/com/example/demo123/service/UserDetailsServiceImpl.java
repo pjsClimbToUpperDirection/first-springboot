@@ -12,24 +12,22 @@ import java.sql.ResultSet;
 @Service
 public class UserDetailsServiceImpl implements UserDetailsService {
     @Override
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+    public UserDetails loadUserByUsername(String username) {
         try {
             ResultSet finded = new CustomUserDao().findUserDetailsByUserName(username);
             if (!finded.next())
                 throw new UsernameNotFoundException("not found");
             return CustomUserDetails.builder()
-                    .id(finded.getString(0))
-                    .username(finded.getString(1))
-                    .password(finded.getString(2))
-                    .email(finded.getString(3))
-                    .emailVerified(finded.getBoolean(4))
-                    .locked(finded.getBoolean(5))
-                    .role(finded.getString(6))
+                    .id(finded.getString(1))
+                    .username(finded.getString(2))
+                    .password(finded.getString(3))
+                    .email(finded.getString(4))
+                    .emailVerified(finded.getBoolean(5))
+                    .locked(finded.getBoolean(6))
+                    .role(finded.getString(7))
                     .build();
-        } catch (UsernameNotFoundException e) {
-            throw new UsernameNotFoundException("not found");
         } catch (Exception e) {
-            throw new UsernameNotFoundException("inner Error");
+            throw new UsernameNotFoundException(e.getMessage());
         }
     }
 }
