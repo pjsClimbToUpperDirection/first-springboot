@@ -16,10 +16,10 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.authentication.AuthenticationManager;
 
-import com.example.demo123.service.jwt.jwtUtil;
-
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
+
+import com.example.demo123.component.jwtUtil;
 
 @RestController
 @RequestMapping("/api/v1/auth-api")

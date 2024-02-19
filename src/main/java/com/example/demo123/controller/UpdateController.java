@@ -16,7 +16,7 @@ import java.sql.SQLException;
 import java.util.HashMap;
 
 @RestController
-@RequestMapping("/api/v1/update-api")
+@RequestMapping("/api/v1/patch-api")
 public class UpdateController {
 
     public UpdateController(){}
