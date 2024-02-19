@@ -16,8 +16,7 @@ import static org.springframework.security.config.Customizer.withDefaults;
 @EnableWebSecurity
 public class jwtConfig {
     private final jwtRequestFilter jwtRequestFilter;
-
-    public jwtConfig(com.example.demo123.component.jwtRequestFilter jwtRequestFilter) {
+    public jwtConfig(jwtRequestFilter jwtRequestFilter) {
         this.jwtRequestFilter = jwtRequestFilter;
     }
 
@@ -35,6 +34,8 @@ public class jwtConfig {
                 //        .accessDeniedHandler()
                 //)
                 .addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class)
-                .httpBasic(withDefaults()).build();
+                // .addFilterBefore(new ExceptionHandlerFilter(), jwtRequestFilter.class)
+                .httpBasic(withDefaults())
+                .build();
     }
 }

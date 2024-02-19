@@ -19,14 +19,12 @@ import java.util.function.Function;
 @Component
 @PropertySource("classpath:application.properties")
 public class jwtUtil {
-    // String 타입의 비밀 키를 보유하고 있을 시 SecretKey 인스턴스로 변환하여 signWith 메서드의 인자로 사용할수 있도록 해야 한다.
-    @Value("${jwt.secretKey}")
-    private String secret_Key;
-    // if your secret key is A Base64-encoded string
-    // https://github.com/jwtk/jjwt/blob/master/api/src/main/java/io/jsonwebtoken/io/ExceptionPropagatingDecoder.java
-    private final SecretKey key = Keys.hmacShaKeyFor(Decoders.BASE64.decode(secret_Key));
 
+    public jwtUtil(@Value("${jwt.secretKey}") String secret_Key) {
+        this.key = Keys.hmacShaKeyFor(Decoders.BASE64.decode(secret_Key));
+    }
 
+    private final SecretKey key;
     // 토큰에서 사용자 이름을 추출하는 함수
     public String extractUsername(String token) {
         return extractClaim(token, Claims::getSubject);
