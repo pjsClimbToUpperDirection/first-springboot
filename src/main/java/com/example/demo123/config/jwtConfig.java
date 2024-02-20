@@ -34,7 +34,7 @@ public class jwtConfig {
                 //        .accessDeniedHandler()
                 //)
                 .addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class)
-                .addFilterBefore(new ExceptionHandlerFilter(), jwtRequestFilter.class)
+                // .addFilterBefore(new ExceptionHandlerFilter(), jwtRequestFilter.class)
                 .httpBasic(withDefaults())
                 .build();
     }
