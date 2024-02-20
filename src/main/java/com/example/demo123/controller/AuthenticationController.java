@@ -39,7 +39,6 @@ public class AuthenticationController {
     public ResponseEntity<HashMap<String, String>> createAuthenticationToken(@RequestBody AuthenticationRequest authenticationRequest) {
         headers.setContentType(new MediaType("application", "json", StandardCharsets.UTF_8));
         HashMap<String, String> map = new HashMap<>();
-
         try {
             // 반환 객체를 참조하는 필드를 지정하지 않는다, 예외가 발생하지 않을 시 인증된 것으로 간주한다.
             authenticationManager.authenticate(
