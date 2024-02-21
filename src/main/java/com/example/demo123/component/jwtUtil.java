@@ -1,6 +1,8 @@
 package com.example.demo123.component;
 
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
@@ -26,12 +28,8 @@ public class jwtUtil {
 
     private final SecretKey key;
     // 토큰에서 사용자 이름을 추출하는 함수
-    public String extractUsername(String token) {
+    public String extractUsername(String token) throws JwtException {
         return extractClaim(token, Claims::getSubject);
-    }
-    // 토큰에서 만료 일자를 추출하는 함수
-    public Date extractExpiration(String token) {
-        return extractClaim(token, Claims::getExpiration);
     }
     // 사용자 정보를 기반으로 JWT 토큰을 생성하는 함수
     // 주 역할을 하는 메서드는 private 접근자를 가지므로 해당 메서드는 유일한 접근 경로로서 기능이 추가될수 있다
@@ -39,21 +37,25 @@ public class jwtUtil {
         return createToken(claims, userDetails.getUsername());
     }
     // 토큰의 유효성을 검증하는 함수 -> 최초로 외부 요청을 받아 필요한 메서드들을 사용, 검증을 수행함
-    public Boolean validateToken(String token, UserDetails userDetails) {
+    public Boolean validateToken(String token, UserDetails userDetails) throws JwtException {
         final String username = extractUsername(token); // 토큰이 유효하지 않을 시 extractAllClaims 에서 예외
         return (username.equals(userDetails.getUsername()) && !isTokenExpired(token));
     }
 
 
+    // 토큰에서 만료 일자를 추출하는 함수
+    private Date extractExpiration(String token) {
+        return extractClaim(token, Claims::getExpiration);
+    }
 
     // 토큰에서 claim 추출 후 resolve
-    private  <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
+    private  <T> T extractClaim(String token, Function<Claims, T> claimsResolver) throws JwtException {
         final Claims claims = extractAllClaims(token);
         return claimsResolver.apply(claims); // claim 에 '해당 함수' 적용
     }
 
     // JWT 토큰이 포함된 요청이 들어올 시 토큰 검증을 위한 claim 의 본문을 추출하는 함수
-    private Claims extractAllClaims(String token) {
+    private Claims extractAllClaims(String token) throws JwtException {
         return Jwts.parser() // return Classes.newInstance("io.jsonwebtoken.impl.DefaultJwtParserBuilder")
                 .verifyWith(key) // Sets the signature verification SecretKey used to verify all encountered JWS signatures
                 .build()
@@ -76,7 +78,7 @@ public class jwtUtil {
                 .and()
                 .subject(subject)
                 .issuedAt(new Date(System.currentTimeMillis()))
-                .expiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 10)) // 토큰 만료 시간 설정 (현재는 10시간)
+                .expiration(new Date(System.currentTimeMillis() + 1000 * 100)) // 토큰 만료 시간 설정 (현재는 100초)
                 .claims(claims) // builder 패턴 메서드로 주어지지 않는 claim 설정
                 .signWith(key, Jwts.SIG.HS256).compact();
     }
