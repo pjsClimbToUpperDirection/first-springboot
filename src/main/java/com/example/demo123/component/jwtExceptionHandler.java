@@ -23,16 +23,9 @@ public class jwtExceptionHandler extends OncePerRequestFilter {
     }
 
     private void handleError(HttpServletResponse response, Exception e) throws IOException {
-        // 예외에 따른 처리
-        if (e instanceof JwtException) {
-            // 사용자 정의 예외 처리
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            response.getWriter().write(e.toString());
-        } else {
-            // 기타 예외 처리
-            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            response.getWriter().write("Internal Server Error");
-        }
+        // 기타 예외 처리
+        response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+        response.getWriter().write("Internal Server Error");
     }
 }
 

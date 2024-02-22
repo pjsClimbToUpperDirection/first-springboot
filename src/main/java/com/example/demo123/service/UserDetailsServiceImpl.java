@@ -11,10 +11,14 @@ import java.sql.ResultSet;
 
 @Service
 public class UserDetailsServiceImpl implements UserDetailsService {
+    private final CustomUserDao customUserDao;
+    public UserDetailsServiceImpl(CustomUserDao customUserDao){
+        this.customUserDao = customUserDao;
+    }
     @Override
     public UserDetails loadUserByUsername(String username) {
         try {
-            ResultSet finded = new CustomUserDao().findUserDetailsByUserName(username);
+            ResultSet finded = customUserDao.findUserDetailsByUserName(username);
             if (!finded.next())
                 throw new UsernameNotFoundException("not found");
             return CustomUserDetails.builder()

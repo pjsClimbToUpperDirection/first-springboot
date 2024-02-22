@@ -33,8 +33,11 @@ public class jwtUtil {
     }
     // 사용자 정보를 기반으로 JWT 토큰을 생성하는 함수
     // 주 역할을 하는 메서드는 private 접근자를 가지므로 해당 메서드는 유일한 접근 경로로서 기능이 추가될수 있다
-    public String generateToken(@Nullable Map<String, Object> claims, UserDetails userDetails) {
-        return createToken(claims, userDetails.getUsername());
+    public String generateJwt(@Nullable Map<String, Object> claims, UserDetails userDetails, Integer validedPeriod) {
+        return createToken(claims, userDetails.getUsername(), validedPeriod);
+    }
+    public String generateRefresh(@Nullable Map<String, Object> claims, UserDetails userDetails, Integer validedPeriod) {
+        return createToken(claims, null, validedPeriod);
     }
     // 토큰의 유효성을 검증하는 함수 -> 최초로 외부 요청을 받아 필요한 메서드들을 사용, 검증을 수행함
     public Boolean validateToken(String token, UserDetails userDetails) throws JwtException {
@@ -59,6 +62,7 @@ public class jwtUtil {
         return Jwts.parser() // return Classes.newInstance("io.jsonwebtoken.impl.DefaultJwtParserBuilder")
                 .verifyWith(key) // Sets the signature verification SecretKey used to verify all encountered JWS signatures
                 .build()
+                // todo 토큰 만료
                 .parseSignedClaims(token) // io.jsonwebtoken.JwtException 예외 발생 가능성 (토큰이 유효하지 않은 등의 이유)
                 .getPayload(); // 본문 추출, 타 함수에서 사용
     }
@@ -70,7 +74,7 @@ public class jwtUtil {
 
 
     // 클레임과 사용자 이름을 기반으로 JWT(JWS) 토큰을 생성하는 함수
-    private String createToken(@Nullable Map<String, Object> claims, String subject) {
+    private String createToken(@Nullable Map<String, Object> claims, @Nullable String subject, Integer validedPeriod) {
         return Jwts.builder()
 
                 .header()
@@ -78,7 +82,7 @@ public class jwtUtil {
                 .and()
                 .subject(subject)
                 .issuedAt(new Date(System.currentTimeMillis()))
-                .expiration(new Date(System.currentTimeMillis() + 1000 * 100)) // 토큰 만료 시간 설정 (현재는 100초)
+                .expiration(new Date(System.currentTimeMillis() + 1000L * validedPeriod)) // 토큰 만료 시간 설정 (현재는 100초)
                 .claims(claims) // builder 패턴 메서드로 주어지지 않는 claim 설정
                 .signWith(key, Jwts.SIG.HS256).compact();
     }

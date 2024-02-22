@@ -8,21 +8,17 @@ import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.util.ArrayList;
-import java.util.HashMap;
 
 @Component
-public class CustomUserDao {
-    public CustomUserDao(){};
-
+public class TokenDao {
+    public TokenDao(){}
     AnnotationConfigApplicationContext ctx = new AnnotationConfigApplicationContext(DbConfig.class);
     DataSource dataSource = ctx.getBean("dataSource", DataSource.class);
-
-    public ResultSet findUserDetailsByUserName(String username) throws Exception {
+    public ResultSet findRefreshToken(String refreshToken) throws Exception {
         Connection connection;
         connection = dataSource.getConnection();
-        PreparedStatement statement = connection.prepareStatement("SELECT * FROM userdetails WHERE username = ?");
-        statement.setString(1, username);
+        PreparedStatement statement = connection.prepareStatement("SELECT * FROM refreshtokenlist WHERE refreshtoken = ?");
+        statement.setString(1, refreshToken);
         return statement.executeQuery();
     }
 }
