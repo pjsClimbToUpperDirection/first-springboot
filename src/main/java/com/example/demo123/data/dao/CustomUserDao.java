@@ -25,4 +25,5 @@ public class CustomUserDao {
         statement.setString(1, username);
         return statement.executeQuery();
     }
+    // todo 추후 사용자 관련 로직 작성 영역
 }

@@ -1,4 +1,4 @@
-package com.example.demo123.component;
+package com.example.demo123.component.jwt;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;

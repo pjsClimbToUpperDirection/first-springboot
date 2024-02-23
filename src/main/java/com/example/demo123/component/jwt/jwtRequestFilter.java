@@ -1,8 +1,7 @@
-package com.example.demo123.component;
+package com.example.demo123.component.jwt;
 
 
 import com.example.demo123.data.dao.LoginStatusDao;
-import com.example.demo123.service.RefreshTokenVerifier;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.MalformedJwtException;
@@ -61,7 +60,7 @@ public class jwtRequestFilter extends OncePerRequestFilter {
                     username = jwtUtil.extractUsername(jwt); // jwt 에서 사용자 이름 추출
                 } catch (ExpiredJwtException e) {
                     if (!jwtUtil.isTokenExpired(refreshHeader)) { // 리프래시 토큰이 만료되지 않은 경우
-                        if (loginStatusDao.checkLoginStatus(refreshHeader)) { // 리프래시 토큰이 조회될 시 실행
+                        if (loginStatusDao.checkLoginStatus(refreshHeader)) { // 리프래시 토큰이 조회될 시 이하 코드 실행
                             username = e.getClaims().getSubject();
                             final UserDetails userDetails = userDetailsService.loadUserByUsername(username);
                             jwt = jwtUtil.generateJwt(null, userDetails, validedPeriod);

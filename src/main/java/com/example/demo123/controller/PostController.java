@@ -1,9 +1,7 @@
 package com.example.demo123.controller;
 
 import com.example.demo123.data.dao.PostDao;
-import com.example.demo123.data.dao.UserDao;
 import com.example.demo123.data.dto.Post;
-import com.example.demo123.data.dto.User;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -55,31 +53,4 @@ public class PostController {
         }
         return new ResponseEntity<>(mapForException, headers, 500);
     }
-
-    /*@PostMapping("/signup")
-    public ResponseEntity<HashMap<String, String>> createUser(@RequestBody User subscriber) {
-        HttpHeaders headers= new HttpHeaders();
-        headers.setContentType(new MediaType("application", "json", StandardCharsets.UTF_8));
-
-        HashMap<String, String> mapForException = new HashMap<>();
-        // todo password 는 front 영역에서 암호화 처리한 다음 전송된다
-        if (subscriber.getPassword() == null){
-            mapForException.put("creating a account is failed", "password is required");
-            return new ResponseEntity<>(mapForException, headers, 400);
-        }
-        try {
-            if (new UserDao().confirmForUsable(subscriber)){
-                new UserDao().signUp(subscriber);
-                return new ResponseEntity<>(null, headers, 201);
-            } else {
-                mapForException.put("subscribing is failed", "this user_name is already being used");
-                return new ResponseEntity<>(mapForException, headers, 400);
-            }
-        } catch (SQLException e) {
-            mapForException.put("SqlException", e.getMessage());
-        } catch (Exception e) {
-            mapForException.put("Exception", e.getMessage());
-        }
-        return new ResponseEntity<>(mapForException, headers, 500);
-    }*/
 }

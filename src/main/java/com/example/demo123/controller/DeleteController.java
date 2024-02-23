@@ -1,9 +1,7 @@
 package com.example.demo123.controller;
 
 import com.example.demo123.data.dao.PostDao;
-import com.example.demo123.data.dao.UserDao;
 import com.example.demo123.data.dto.Post;
-import com.example.demo123.data.dto.User;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -48,30 +46,4 @@ public class DeleteController {
         }
         return new ResponseEntity<>(mapForException, headers, 500);
     }
-
-    /*@DeleteMapping("/cancellation")
-    public ResponseEntity<HashMap<String, String>> Cancellation (@RequestBody User user) {
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(new MediaType("application", "json", StandardCharsets.UTF_8));
-
-        HashMap<String, String> mapForException = new HashMap<>();
-        try {
-            if (user.getPassword() == null)
-                mapForException.put("IllegalArgumentException", "password must be defined");
-            if (!mapForException.isEmpty())
-                throw new IllegalArgumentException("triggered this try-catch logic");
-        } catch (Exception e) {
-            return new ResponseEntity<>(mapForException, headers, 400);
-        }
-
-        try {
-            new UserDao().cancellation(user);
-            return new ResponseEntity<>(null, headers, 200);
-        } catch (SQLException e) {
-            mapForException.put("SqlException", e.getMessage());
-        } catch (Exception e) {
-            mapForException.put("OtherException", e.getMessage());
-        }
-        return new ResponseEntity<>(mapForException, headers, 500);
-    } */
 }
