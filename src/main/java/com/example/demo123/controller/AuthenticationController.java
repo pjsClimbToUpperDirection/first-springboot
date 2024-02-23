@@ -1,5 +1,7 @@
 package com.example.demo123.controller;
 
+import com.example.demo123.data.dao.LoginStatusDao;
+import com.example.demo123.data.dao.TokenDao;
 import com.example.demo123.data.dto.AuthenticationRequest;
 import com.example.demo123.data.dto.Token;
 import org.springframework.beans.factory.annotation.Value;
@@ -21,6 +23,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.authentication.AuthenticationManager;
 
 import java.nio.charset.StandardCharsets;
+import java.sql.SQLException;
 import java.util.HashMap;
 
 import com.example.demo123.component.jwtUtil;
@@ -34,20 +37,21 @@ public class AuthenticationController {
     private final AuthenticationManager authenticationManager;
     private final UserDetailsService userDetailsService;
     private final jwtUtil jwtUtil;
+    private final LoginStatusDao loginStatusDao;
 
     @Value("${jwt.validedPeriod}")
     private Integer validedPeriod;
 
-    public AuthenticationController(AuthenticationManager authenticationManager, UserDetailsService userDetailsService, jwtUtil jwtUtil) {
+    public AuthenticationController(AuthenticationManager authenticationManager, UserDetailsService userDetailsService, jwtUtil jwtUtil, LoginStatusDao loginStatusDao) {
         this.authenticationManager = authenticationManager;
         this.userDetailsService = userDetailsService;
         this.jwtUtil = jwtUtil;
+        this.loginStatusDao = loginStatusDao;
     }
 
     @PostMapping("/issue")
     public ResponseEntity<Token> createAuthenticationToken(@RequestBody AuthenticationRequest authenticationRequest) {
         headers.setContentType(new MediaType("application", "json", StandardCharsets.UTF_8));
-        HashMap<String, String> map = new HashMap<>();
         try {
             // 반환 객체를 참조하는 필드를 지정하지 않는다, 예외가 발생하지 않을 시 인증된 것으로 간주한다.
             authenticationManager.authenticate(
@@ -68,11 +72,17 @@ public class AuthenticationController {
         final UserDetails userDetails = userDetailsService.loadUserByUsername(authenticationRequest.getUsername());
 
         // jwt, refresh 발급 (유효기간 100, 1000초)
-        // jwtUtil.generateJwt(null, userDetails, 100), jwtUtil.generateRefresh(null, userDetails, 1000)
+        String Access = jwtUtil.generateJwt(null, userDetails, validedPeriod);
+        String Refresh = jwtUtil.generateRefresh(null, validedPeriod * 10);
         Token token = Token.builder()
-                .accessToken(jwtUtil.generateJwt(null, userDetails, validedPeriod))
-                .refreshToken(jwtUtil.generateRefresh(null, userDetails, validedPeriod * 10)).build();
-
+                .accessToken(Access)
+                .refreshToken(Refresh).build();
+        try {
+            loginStatusDao.activateLoginStatus(authenticationRequest.getUsername() ,Refresh);
+        } catch (SQLException e) {
+            log.info("Exception on Inserting refreshToken in DB: " , e);
+            return new ResponseEntity<>(null, headers, 500);
+        }
         return new ResponseEntity<>(token, headers, 200);
     }
 }

@@ -13,8 +13,10 @@ public class RefreshTokenVerifier {
     }
 
     public String verification(String refreshToken) {
+        String findedRefreshToken;
         try {
-            return tokenDao.findRefreshToken(refreshToken).getString(1);
+            findedRefreshToken = tokenDao.findRefreshToken(refreshToken);
+            return findedRefreshToken;
         } catch (Exception e) {
 
         }

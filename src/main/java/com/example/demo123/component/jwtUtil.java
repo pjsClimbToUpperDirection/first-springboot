@@ -1,7 +1,6 @@
 package com.example.demo123.component;
 
 import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
@@ -36,7 +35,7 @@ public class jwtUtil {
     public String generateJwt(@Nullable Map<String, Object> claims, UserDetails userDetails, Integer validedPeriod) {
         return createToken(claims, userDetails.getUsername(), validedPeriod);
     }
-    public String generateRefresh(@Nullable Map<String, Object> claims, UserDetails userDetails, Integer validedPeriod) {
+    public String generateRefresh(@Nullable Map<String, Object> claims, Integer validedPeriod) {
         return createToken(claims, null, validedPeriod);
     }
     // 토큰의 유효성을 검증하는 함수 -> 최초로 외부 요청을 받아 필요한 메서드들을 사용, 검증을 수행함
@@ -44,6 +43,11 @@ public class jwtUtil {
         final String username = extractUsername(token); // 토큰이 유효하지 않을 시 extractAllClaims 에서 예외
         return (username.equals(userDetails.getUsername()) && !isTokenExpired(token));
     }
+    // 토큰이 만료되었는지 확인하는 함수
+    public Boolean isTokenExpired(String token) {
+        return extractExpiration(token).before(new Date());
+    }
+
 
 
     // 토큰에서 만료 일자를 추출하는 함수
@@ -62,16 +66,9 @@ public class jwtUtil {
         return Jwts.parser() // return Classes.newInstance("io.jsonwebtoken.impl.DefaultJwtParserBuilder")
                 .verifyWith(key) // Sets the signature verification SecretKey used to verify all encountered JWS signatures
                 .build()
-                // todo 토큰 만료
                 .parseSignedClaims(token) // io.jsonwebtoken.JwtException 예외 발생 가능성 (토큰이 유효하지 않은 등의 이유)
                 .getPayload(); // 본문 추출, 타 함수에서 사용
     }
-
-    // 토큰이 만료되었는지 확인하는 함수
-    private Boolean isTokenExpired(String token) {
-        return extractExpiration(token).before(new Date());
-    }
-
 
     // 클레임과 사용자 이름을 기반으로 JWT(JWS) 토큰을 생성하는 함수
     private String createToken(@Nullable Map<String, Object> claims, @Nullable String subject, Integer validedPeriod) {

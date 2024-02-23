@@ -8,17 +8,30 @@ import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 
 @Component
 public class TokenDao {
     public TokenDao(){}
     AnnotationConfigApplicationContext ctx = new AnnotationConfigApplicationContext(DbConfig.class);
     DataSource dataSource = ctx.getBean("dataSource", DataSource.class);
-    public ResultSet findRefreshToken(String refreshToken) throws Exception {
+
+    public void InsertRefreshToken(String refreshToken) throws SQLException {
+        Connection connection;
+        connection = dataSource.getConnection();
+        PreparedStatement statement = connection.prepareStatement("INSERT INTO refreshtokenlist (refreshtoken) VALUES (?)"); // todo issuerlist
+        statement.setString(1, refreshToken);
+        statement.executeUpdate();
+        connection.close();
+    }
+
+    public String findRefreshToken(String refreshToken) throws Exception {
         Connection connection;
         connection = dataSource.getConnection();
         PreparedStatement statement = connection.prepareStatement("SELECT * FROM refreshtokenlist WHERE refreshtoken = ?");
         statement.setString(1, refreshToken);
-        return statement.executeQuery();
+        String selected =  statement.executeQuery().getString(1);
+        connection.close();
+        return selected;
     }
 }
