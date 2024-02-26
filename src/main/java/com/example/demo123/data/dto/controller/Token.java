@@ -1,9 +1,7 @@
-package com.example.demo123.data.dto;
+package com.example.demo123.data.dto.controller;
 
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 
 @Builder
 @Getter

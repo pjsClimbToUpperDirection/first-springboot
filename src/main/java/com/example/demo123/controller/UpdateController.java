@@ -4,29 +4,27 @@ import com.example.demo123.data.dao.PostDao;
 import com.example.demo123.data.dto.Post;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.nio.charset.StandardCharsets;
-import java.sql.SQLException;
 import java.util.HashMap;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/v1/patch-api")
 public class UpdateController {
-
-    public UpdateController(){}
+    private final PostDao postDao;
+    private final HttpHeaders httpHeaders;
+    public UpdateController(PostDao postDao, HttpHeaders httpHeaders){
+        this.postDao = postDao;
+        this.httpHeaders = httpHeaders;
+    }
 
     // 4가지 인자를 전부 요구함
     @PatchMapping("/updatePosts")
-    public ResponseEntity<HashMap<String, String>> UpdatePosts(@RequestBody JsonNode updateObj){
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(new MediaType("application", "json", StandardCharsets.UTF_8));
-
-        HashMap<String, String> mapForException = new HashMap<>();
-
+    public ResponseEntity<Void> UpdatePosts(@RequestBody JsonNode updateObj){ // todo 해당 인자의 dto 정의하기
         // 역직렬화를 위한 객체 선언;
         ObjectMapper mapper = new ObjectMapper();
         Post selected;
@@ -37,33 +35,27 @@ public class UpdateController {
             updated =  mapper.treeToValue(updateObj.get("updated"), Post.class);
 
             try {
-                if (selected.getWriter() == null)
-                    mapForException.put("IllegalArgumentException-writer", "writer must be defined");
-                if (selected.getTitle() == null)
-                    mapForException.put("IllegalArgumentException-title", "Title must be defined");
-                if (updated.getTitle() == null)
-                    mapForException.put("IllegalArgumentException-updatedTitle", "which is updated as a newTitle must be defined");
-                if (updated.getContent() == null)
-                    mapForException.put("IllegalArgumentException-updatedContent", "which is updated as a newContent must be defined");
-                if (!mapForException.isEmpty())
-                    throw new IllegalArgumentException("triggered this try-catch logic");
+                if (selected.getWriter() == null && selected.getTitle() == null)
+                    throw new IllegalArgumentException("writer and title that is reference of previous Post must be defined");
+                if (updated.getTitle() == null && updated.getContent() == null)
+                    throw new IllegalArgumentException("which is updated as a newTitle must be defined");
             } catch (Exception e) {
-                return new ResponseEntity<>(mapForException, headers, 400);
+                log.warn("at UpdateController.UpdatePosts: ", e);
+                return new ResponseEntity<>(null, httpHeaders, 400);
             }
 
         } catch (Exception e) {
-            mapForException.put("Exception in process of Deserialization", e.getMessage());
-            return new ResponseEntity<>(mapForException, headers, 500);
+            log.warn("at UpdateController.UpdatePosts: ", e);
+            return new ResponseEntity<>(null, httpHeaders, 500);
         }
         try {
-            new PostDao().updatePosts(selected, updated);
-            return new ResponseEntity<>(null, headers, 200);
-        } catch (SQLException e) {
-            mapForException.put("SqlException", e.getMessage());
+            // todo 서비스 레이어가 필요할 시 분리
+            postDao.updatePosts(selected, updated);
+            return new ResponseEntity<>(null, httpHeaders, 200);
         } catch (Exception e) {
-            mapForException.put("OtherException", e.getMessage());
+            log.warn("at UpdateController.UpdatePosts: ", e);
         }
-        return new ResponseEntity<>(mapForException, headers, 500);
+        return new ResponseEntity<>(null, httpHeaders, 500);
     }
 
 }

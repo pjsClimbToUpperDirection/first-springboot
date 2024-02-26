@@ -1,52 +1,48 @@
 package com.example.demo123.controller;
 
 
+import com.example.demo123.component.Translater;
 import com.example.demo123.data.dao.PostDao;
 import com.example.demo123.data.dto.Post;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.nio.charset.StandardCharsets;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 
 // org.springframework.web.bind.annotation
+@Slf4j
 @RestController
 @RequestMapping("/api/v1/get-api")
 public class GetController {
-
-    public GetController(){}
+    private final HttpHeaders httpHeaders;
+    private final PostDao postDao;
+    private final Translater translater;
+    public GetController(HttpHeaders httpHeaders, PostDao postDao, Translater translater){
+        this.httpHeaders = httpHeaders;
+        this.postDao = postDao;
+        this.translater = translater;
+    }
 
 
     // 조건에 해당하는 글 전부를 조회 (저자, 제목, 생성 혹은 수정일), 이후 해당하는 게시글 목록을 반환
     @GetMapping("/lookUp")
-    public ResponseEntity<ArrayList<HashMap<String, String>>> lookUpPosts(@RequestBody Post post) {
-        HttpHeaders httpHeaders= new HttpHeaders();
-        httpHeaders.setContentType(new MediaType("application", "json", StandardCharsets.UTF_8));
-
-        ArrayList<HashMap<String, String>> rowList = new ArrayList<>();
-        HashMap<String, String> mapForException = new HashMap<>();
+    public ResponseEntity<ArrayList<Post>> lookUpPosts(@RequestBody Post post) {
         try {
-            if (post.getWriter() == null & post.getTitle() == null & post.getCreated_date() == null)
-                mapForException.put("IllegalArgumentException" ,"define some argument at lease one or more");
-            if (!mapForException.isEmpty())
-                throw new IllegalArgumentException("triggered this try-catch logic");
+            if (post.getWriter() == null && post.getTitle() == null && post.getCreated_date() == null)
+                throw new IllegalArgumentException("define some argument at lease one or more");
         } catch (Exception e) {
-            rowList.add(mapForException);
-            return new ResponseEntity<>(rowList, httpHeaders, 400);
+            log.warn("at GetController.lookUpPosts: ", e);
+            return new ResponseEntity<>(null, httpHeaders, 400);
         }
 
-        try {
-            return new ResponseEntity<>(new PostDao().lookUpPosts(post), httpHeaders, 200);
-        } catch (SQLException e) {
-            mapForException.put("SqlException", e.getMessage());
+        try { // todo 서비스 레이어가 필요할 시 Dao 분리
+            return new ResponseEntity<>(translater.ForResultSet(postDao.lookUpPosts(post)), httpHeaders, 200);
         } catch (Exception e) {
-            mapForException.put("OtherException", e.getMessage());
+            log.warn("at GetController.lookUpPosts: ", e);
+            return new ResponseEntity<>(null, httpHeaders, 500);
         }
-        rowList.add(mapForException);
-        return new ResponseEntity<>(rowList, httpHeaders, 500);
     }
 }

@@ -1,9 +1,9 @@
 package com.example.demo123.controller;
 
 import com.example.demo123.data.dao.LoginStatusDao;
-import com.example.demo123.data.dto.AuthenticationRequest;
-import com.example.demo123.data.dto.Token;
 import com.example.demo123.component.jwt.*;
+import com.example.demo123.data.dto.controller.AuthenticationRequest;
+import com.example.demo123.data.dto.controller.Token;
 import org.springframework.beans.factory.annotation.Value;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.PropertySource;

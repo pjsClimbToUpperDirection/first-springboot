@@ -2,6 +2,7 @@ package com.example.demo123.controller;
 
 import com.example.demo123.data.dao.PostDao;
 import com.example.demo123.data.dto.Post;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -11,14 +12,18 @@ import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
 import java.util.HashMap;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/v1/delete-api")
 public class DeleteController {
-    public DeleteController(){}
+    private final PostDao postDao;
+    public DeleteController(PostDao postDao){
+        this.postDao = postDao;
+    }
 
     //  '저자, 글 제목, 날짜(생성 혹은 최근 수정일)'을 인자로 받음, 무분별한 삭제를 방지하고자 세 조건 모두가 명확히 주어지지 않았을 시 삭제하지 않음
     @DeleteMapping("/deletePost")
-    public ResponseEntity<HashMap<String, String>> DeletePost (@RequestBody Post post) {
+    public ResponseEntity<Void> DeletePost (@RequestBody Post post) {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(new MediaType("application", "json", StandardCharsets.UTF_8));
 
@@ -33,17 +38,17 @@ public class DeleteController {
             if (mapForException.size() >= 2)
                 throw new IllegalArgumentException("triggered this try-catch logic");
         } catch (Exception e) {
-            return new ResponseEntity<>(mapForException, headers, 400);
+            log.warn("at DeleteController.DeletePost: ", e);
+            return new ResponseEntity<>(null, headers, 400);
         }
 
         try {
-            new PostDao().DeletePost(post);
+            // todo 서비스 레이어가 필요할 시 분리
+            postDao.DeletePost(post);
             return new ResponseEntity<>(null, headers, 204);
-        } catch (SQLException e) {
-            mapForException.put("SqlException", e.getMessage());
         } catch (Exception e) {
-            mapForException.put("OtherException", e.getMessage());
+            log.warn("at DeleteController.DeletePost: ", e);
         }
-        return new ResponseEntity<>(mapForException, headers, 500);
+        return new ResponseEntity<>(null, headers, 500);
     }
 }

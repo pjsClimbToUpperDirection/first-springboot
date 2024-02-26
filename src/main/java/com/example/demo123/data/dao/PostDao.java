@@ -3,6 +3,7 @@ package com.example.demo123.data.dao;
 import com.example.demo123.config.DbConfig;
 import com.example.demo123.data.dto.Post;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+import org.springframework.stereotype.Repository;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
@@ -14,6 +15,7 @@ import java.util.*;
 
 // 추후 반복되는 코드를 분리할수 있도록 한다.
 // 정의된 다음 네 가지 메서드 이외에 추가 메서드 작성은 지양할 것
+@Repository
 public class PostDao {
     public PostDao(){}
     AnnotationConfigApplicationContext ctx = new AnnotationConfigApplicationContext(DbConfig.class);
@@ -38,7 +40,7 @@ public class PostDao {
     }
 
     // 조회 영역이므로 유일하게 본문을 반환
-    public ArrayList<HashMap<String, String>> lookUpPosts(Post post) throws Exception {
+    public ResultSet lookUpPosts(Post post) throws Exception {
         Connection connection;
         connection = dataSource.getConnection();
         PreparedStatement statement;
@@ -88,10 +90,9 @@ public class PostDao {
         }
 
         ResultSet selectedRow = statement.executeQuery();
-        ArrayList<HashMap<String, String>> selectedList = resultSet(selectedRow);
         connection.close();
 
-        return selectedList;
+        return selectedRow;
     }
 
 
@@ -129,46 +130,21 @@ public class PostDao {
                 statement.setString(2, post.getTitle());
             }
         } else if (post.getWriter() != null) {
-            if (post.getCreated_date() != null) {
-                StatementAsResult = defaultStatement + "writer = ? AND ((created_date = ? AND updated_date IS NULL) OR updated_date = ?)";
-                statement = connection.prepareStatement(StatementAsResult);
-                statement.setString(1, post.getWriter());
-                statement.setString(2, post.getCreated_date());
-                statement.setString(3, post.getCreated_date());
-            } else
-                throw new IllegalArgumentException("argument must be two more");
-        } else if (post.getTitle() != null) {
-            if (post.getCreated_date() != null) {
-                StatementAsResult = defaultStatement + "title = ? AND ((created_date = ? AND updated_date IS NULL) OR updated_date = ?)";
-                statement = connection.prepareStatement(StatementAsResult);
-                statement.setString(1, post.getTitle());
-                statement.setString(2, post.getCreated_date());
-                statement.setString(3, post.getCreated_date());
-            } else
-                throw new IllegalArgumentException("argument must be two more");
-        } else
-            throw new Exception("failed at construction of the SQL Query");
-
+            StatementAsResult = defaultStatement + "writer = ? AND ((created_date = ? AND updated_date IS NULL) OR updated_date = ?)";
+            statement = connection.prepareStatement(StatementAsResult);
+            statement.setString(1, post.getWriter());
+            statement.setString(2, post.getCreated_date());
+            statement.setString(3, post.getCreated_date());
+        } else { // post.getTitle() != null
+            StatementAsResult = defaultStatement + "title = ? AND ((created_date = ? AND updated_date IS NULL) OR updated_date = ?)";
+            statement = connection.prepareStatement(StatementAsResult);
+            statement.setString(1, post.getTitle());
+            statement.setString(2, post.getCreated_date());
+            statement.setString(3, post.getCreated_date());
+        }
 
         int deletedRow = statement.executeUpdate();
         System.out.println("DELETED_rows_number: " + deletedRow);
         connection.close();
-    }
-
-
-
-    // todo 값을 변환하는 역할은 서비스 레이어로 이동시킬 것
-    private ArrayList<HashMap<String, String>> resultSet(ResultSet selectedRow) throws Exception{
-        String[] columns = {"id", "username", "email", "password", "content", "created_date", "updated_date"};
-        ArrayList<HashMap<String, String>> rowList = new ArrayList<>();
-        while (selectedRow.next()){
-            HashMap<String, String> columnList = new HashMap<>();
-            for (String column : columns) {
-                columnList.put(column, selectedRow.getString(column));
-            }
-            rowList.add(columnList);
-        }
-        System.out.println("SELECTED_ROWS -> " + rowList);
-        return rowList;
     }
 }
