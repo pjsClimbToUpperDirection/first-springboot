@@ -76,11 +76,22 @@ public class AuthenticationController {
                 .accessToken(Access)
                 .refreshToken(Refresh).build();
         try {
-            loginStatusDao.activateLoginStatus(authenticationRequest.getUsername() ,Refresh);
+            loginStatusDao.activateLoginStatus(authenticationRequest.getUsername(), Refresh);
         } catch (SQLException e) {
             log.info("Exception on Inserting refreshToken in DB: " , e);
             return new ResponseEntity<>(null, headers, 500);
         }
         return new ResponseEntity<>(token, headers, 200);
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<Void> expireRefreshToken(@RequestHeader HttpHeaders httpHeaders) {
+        try {
+            loginStatusDao.destroyLoginStatus(httpHeaders.getFirst("refresh"));
+        } catch (SQLException e) {
+            log.info("Exception on deleting refreshToken in DB: " , e);
+            return new ResponseEntity<>(null, headers, 500);
+        }
+        return new ResponseEntity<>(null, headers, 204);
     }
 }

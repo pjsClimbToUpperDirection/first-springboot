@@ -35,18 +35,18 @@ public class LoginStatusDao {
         PreparedStatement statement = connection.prepareStatement("SELECT * FROM refreshtokenlist WHERE refresh = ?");
         statement.setString(1, refreshToken);
         ResultSet result = statement.executeQuery();
+        Boolean isThere = result.next();
         connection.close();
-        return result.next();
+        return isThere;
     }
 
-    // todo 인증 절차를 통과한 후 해당 사용자의 리프래시 토큰을 db에서 삭제함
-    public void destroyLoginStatus(String username) throws SQLException {
+    public void destroyLoginStatus(String refresh) throws SQLException {
         Connection connection;
         connection = dataSource.getConnection();
         // 리프래시 토큰 저장 전 기존 로그인 정보(리프래시) 삭제
-        PreparedStatement statement1 = connection.prepareStatement("DELETE FROM refreshtokenlist where username = ?");
-        statement1.setString(1, username);
-        statement1.executeUpdate();
+        PreparedStatement statement = connection.prepareStatement("DELETE FROM refreshtokenlist where refresh = ?");
+        statement.setString(1, refresh);
+        statement.executeUpdate();
         connection.close();
     }
 }
