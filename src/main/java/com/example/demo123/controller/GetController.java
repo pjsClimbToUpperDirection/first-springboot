@@ -4,13 +4,13 @@ package com.example.demo123.controller;
 import com.example.demo123.component.Translater;
 import com.example.demo123.data.dao.PostDao;
 import com.example.demo123.data.dto.Post;
+import com.example.demo123.service.UserDetailsServiceImpl;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 
 // org.springframework.web.bind.annotation
 @Slf4j
@@ -19,11 +19,13 @@ import java.util.HashMap;
 public class GetController {
     private final HttpHeaders httpHeaders;
     private final PostDao postDao;
+    private final UserDetailsServiceImpl userDetailsService;
     private final Translater translater;
-    public GetController(HttpHeaders httpHeaders, PostDao postDao, Translater translater){
+    public GetController(HttpHeaders httpHeaders, PostDao postDao, Translater translater, UserDetailsServiceImpl userDetailsService){
         this.httpHeaders = httpHeaders;
         this.postDao = postDao;
         this.translater = translater;
+        this.userDetailsService = userDetailsService;
     }
 
 

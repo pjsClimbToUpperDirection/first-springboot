@@ -1,6 +1,7 @@
 package com.example.demo123.data.dto;
 
 import lombok.Builder;
+import lombok.Getter;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -11,6 +12,7 @@ import java.util.Set;
 // 인증 시 사용되는 dto
 // 불변 객체
 @Builder
+@Getter
 public class CustomUserDetails implements UserDetails {
     private String id;
     private String username; // username 은 중복되는 값이 없도록 한다

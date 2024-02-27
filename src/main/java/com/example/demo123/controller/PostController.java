@@ -4,13 +4,9 @@ import com.example.demo123.data.dao.PostDao;
 import com.example.demo123.data.dto.Post;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.nio.charset.StandardCharsets;
-import java.sql.SQLException;
-import java.util.HashMap;
 
 @Slf4j
 @RestController
@@ -28,9 +24,10 @@ public class PostController {
     @PostMapping("/uploadPost")
     public ResponseEntity<Void> UploadPost(@RequestBody Post post){
         try {
-            if (post.getWriter() == null && post.getContent() == null && post.getEmail() == null && post.getTitle() == null) {
+            if (post.getWriter() == null || post.getContent() == null || post.getEmail() == null || post.getTitle() == null) {
                 throw new IllegalArgumentException("one of required argument is null");
-            } else if (post.getEmail() != null && !post.getEmail().matches("^[A-Za-z0-9+_.-]+@(.+)$")){ // @ 앞에 대소문자 알파벳, 0~9까지의 숫자, 언더바,점,하이픈 허용됨, 뒤로는 하나 이상의 어떠한 문자가 존재해야 함
+            }
+            if (!post.getEmail().matches("^[A-Za-z0-9+_.-]+@(.+)$")){ // @ 앞에 대소문자 알파벳, 0~9까지의 숫자, 언더바,점,하이픈 허용됨, 뒤로는 하나 이상의 어떠한 문자가 존재해야 함
                 throw new IllegalArgumentException("this -email- arguments is not suitable on the required format");
             }
         } catch (Exception e) {

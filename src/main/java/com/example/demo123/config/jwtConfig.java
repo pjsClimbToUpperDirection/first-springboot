@@ -29,6 +29,7 @@ public class jwtConfig {
         return httpSecurity
                 .authorizeHttpRequests((authorizeHttpRequests) -> authorizeHttpRequests
                         .requestMatchers("/api/v1/auth-api/issue").permitAll()
+                        .requestMatchers("/api/v1/account-api/register").permitAll()
                         .anyRequest().authenticated()
                 )
                 .csrf(AbstractHttpConfigurer::disable)
