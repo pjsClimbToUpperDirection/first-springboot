@@ -1,7 +1,7 @@
 package com.example.demo123.component.jwt;
 
 
-import com.example.demo123.data.dao.LoginStatusDao;
+import com.example.demo123.data.dao.RedisDao;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.MalformedJwtException;
@@ -22,7 +22,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.sql.SQLException;
+import java.util.Objects;
 
 @Slf4j
 @PropertySource("classpath:application.properties")
@@ -31,15 +31,15 @@ public class jwtRequestFilter extends OncePerRequestFilter {
     // https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/web/filter/OncePerRequestFilter.html
     private final UserDetailsService userDetailsService;
     private final jwtUtil jwtUtil;
-    private final LoginStatusDao loginStatusDao;
+    private final RedisDao redisDao;
 
     @Value("${jwt.validedPeriod}")
     private Integer validedPeriod;
 
-    public jwtRequestFilter(UserDetailsService userDetailsService, jwtUtil jwtUtil, LoginStatusDao loginStatusDao) {
+    public jwtRequestFilter(UserDetailsService userDetailsService, jwtUtil jwtUtil, RedisDao redisDao) {
         this.userDetailsService = userDetailsService;
         this.jwtUtil = jwtUtil;
-        this.loginStatusDao = loginStatusDao;
+        this.redisDao = redisDao;
     }
     @Override
     public void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
@@ -60,8 +60,9 @@ public class jwtRequestFilter extends OncePerRequestFilter {
                     username = jwtUtil.extractUsername(jwt); // jwt 에서 사용자 이름 추출
                 } catch (ExpiredJwtException e) {
                     if (!jwtUtil.isTokenExpired(refreshHeader)) { // 리프래시 토큰이 만료되지 않은 경우
-                        if (loginStatusDao.checkLoginStatus(refreshHeader)) { // 리프래시 토큰이 조회될 시 이하 코드 실행
-                            username = e.getClaims().getSubject();
+                        username = e.getClaims().getSubject();
+                        // 조회된 리프래시 토큰이 제시된 리프래시 토큰과 일치할 시 이하 코드 실행
+                        if (Objects.equals(redisDao.getHashOperations("refresh", username), refreshHeader)) {
                             final UserDetails userDetails = userDetailsService.loadUserByUsername(username);
                             jwt = jwtUtil.generateJwt(null, userDetails, validedPeriod);
 
@@ -85,8 +86,6 @@ public class jwtRequestFilter extends OncePerRequestFilter {
             log.warn("Unsupported JWT Token: ", e);
         } catch (JwtException | IllegalArgumentException e) {
             log.warn("other JWT Exception: ", e);
-        } catch (SQLException e) {
-            log.warn("SqlException: ", e);
         }
         chain.doFilter(request, response);
     }
