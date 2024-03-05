@@ -1,6 +1,5 @@
 package com.example.demo123.data.dao;
 
-import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.HashOperations;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
@@ -23,9 +22,9 @@ public class RedisDao {
         values.set(key, data);
     }
 
-    public void setValues(String key, String data, Duration duration) {
+    public void setValues(String key, String data, Integer duration) {
         ValueOperations<String, Object> values = redisTemplate.opsForValue();
-        values.set(key, data, duration);
+        values.set(key, data, Duration.ofSeconds(duration));
     }
 
     public String getValues(String key) {
@@ -41,7 +40,7 @@ public class RedisDao {
     }
 
     public void setExpireTime(String key, int timeout) {
-        redisTemplate.expire(key, timeout, TimeUnit.MILLISECONDS);
+        redisTemplate.expire(key, timeout, TimeUnit.SECONDS);
     }
 
     // 초기 hash 자료형 설정 시 사용가능

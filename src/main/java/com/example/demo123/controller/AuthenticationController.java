@@ -94,7 +94,7 @@ public class AuthenticationController {
             if (redisDao.getHashOperations("refresh", username).length() > 1) { // 리프래시 토큰이 조회될 시 이하 코드 실행
                 redisDao.deleteHashOperations("refresh", username);
             } else { // 리프래시 토큰이 조회되지 않는 경우
-                return new ResponseEntity<>(null, httpHeaders, 500);
+                return new ResponseEntity<>(null, httpHeaders, 401);
             }
         }
         return new ResponseEntity<>(null, httpHeaders, 204);

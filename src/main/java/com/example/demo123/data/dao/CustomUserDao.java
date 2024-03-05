@@ -37,27 +37,10 @@ public class CustomUserDao {
         statement.setString(1, customUserDetails.getUsername());
         statement.setString(2, customUserDetails.getPassword());
         statement.setString(3, customUserDetails.getEmail());
-        statement.setBoolean(4, false); // 계정 생성후 별도로 이메일 인증 가능
+        statement.setBoolean(4, customUserDetails.isEmailVerified());
         statement.setBoolean(5, false);
         statement.setString(6, "u");
         statement.setString(7, date.format(now));
-        statement.executeUpdate();
-        connection.close();
-    }
-
-    public void verifyEmail(String username) throws Exception {
-        Connection connection;
-        connection = dataSource.getConnection();
-        PreparedStatement statement = connection.prepareStatement("UPDATE userdetails SET emailVerified = true WHERE username = ?");
-        statement.setString(1, username);
-        statement.executeUpdate();
-        connection.close();
-    }
-
-    public void DeleteNotVerifiedAccount() throws Exception {
-        Connection connection;
-        connection = dataSource.getConnection();
-        PreparedStatement statement = connection.prepareStatement("DELETE FROM userdetails WHERE emailVerified = false");
         statement.executeUpdate();
         connection.close();
     }

@@ -30,6 +30,7 @@ public class GetController {
 
 
     // 조건에 해당하는 글 전부를 조회 (저자, 제목, 생성 혹은 수정일), 이후 해당하는 게시글 목록을 반환
+    // title(제목)은 고유한 값이므로 오직 하나의 행이 조회된다
     @GetMapping("/lookUp")
     public ResponseEntity<ArrayList<Post>> lookUpPosts(@RequestBody Post post) {
         try {

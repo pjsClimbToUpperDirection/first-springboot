@@ -47,6 +47,9 @@ dependencies { // 라이브러리 사용을 위한 의존성 설정
 	// redis
 	implementation 'org.springframework.boot:spring-boot-starter-data-redis'
 	implementation 'io.lettuce:lettuce-core'
+
+	// jakarta
+	implementation 'com.sun.mail:jakarta.mail:2.0.0'
 }
 
 tasks.named('test') {

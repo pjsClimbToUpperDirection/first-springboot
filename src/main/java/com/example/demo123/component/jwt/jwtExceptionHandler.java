@@ -19,7 +19,7 @@ public class jwtExceptionHandler extends OncePerRequestFilter {
             // 필터 체인 실행(다음 필터 (jwtRequestFilter) 실행)
             filterChain.doFilter(request, response);
         } catch (Exception e) {
-            log.error(e.toString());
+            log.error("in jwtExceptionHandler", e);
             // 필터 체인 실행 도중 발생한 예외 처리
             handleError(response, e);
         }

@@ -96,15 +96,15 @@ public class PostDao {
     }
 
 
-    public void updatePosts(Post selected, Post updated) throws Exception{
+    // 제목은 수정할수 없도록 함, 업로드 시 작성한 제목(unique)을 사용하여 기존 게시글 조회, 갱신
+    public void updatePost(Post newOne) throws Exception{
         Connection connection;
         connection = dataSource.getConnection();
-        PreparedStatement statement = connection.prepareStatement("UPDATE posts SET title = ?, content = ?, updated_date = ? WHERE writer = ? AND title = ?");
-        statement.setString(1, updated.getTitle());
-        statement.setString(2, updated.getContent());
-        statement.setString(3, date.format(now));
-        statement.setString(4, selected.getWriter());
-        statement.setString(5, selected.getTitle());
+        PreparedStatement statement = connection.prepareStatement("UPDATE posts SET content = ?, updated_date = ? WHERE writer = ? AND title = ?");
+        statement.setString(1, newOne.getContent());
+        statement.setString(2, date.format(now));
+        statement.setString(3, newOne.getWriter());
+        statement.setString(4, newOne.getTitle());
         int updatedRow = statement.executeUpdate();
 
         System.out.println("UPDATED_rows_number: " + updatedRow);
@@ -116,31 +116,20 @@ public class PostDao {
         String defaultStatement = "DELETE FROM posts WHERE ";
         String StatementAsResult;
         if (post.getWriter() != null & post.getTitle() != null) {
-            if (post.getCreated_date() != null) {
-                StatementAsResult = defaultStatement + "writer = ? AND title = ? AND ((created_date = ? AND updated_date IS NULL) OR updated_date = ?)";
-                statement = connection.prepareStatement(StatementAsResult);
-                statement.setString(1, post.getWriter());
-                statement.setString(2, post.getTitle());
-                statement.setString(3, post.getCreated_date());
-                statement.setString(4, post.getCreated_date());
-            } else {
-                StatementAsResult = defaultStatement + "writer = ? AND title = ?";
-                statement = connection.prepareStatement(StatementAsResult);
-                statement.setString(1, post.getWriter());
-                statement.setString(2, post.getTitle());
-            }
-        } else if (post.getWriter() != null) {
-            StatementAsResult = defaultStatement + "writer = ? AND ((created_date = ? AND updated_date IS NULL) OR updated_date = ?)";
+            StatementAsResult = defaultStatement + "writer = ? AND title = ?";
+            statement = connection.prepareStatement(StatementAsResult);
+            statement.setString(1, post.getWriter());
+            statement.setString(2, post.getTitle());
+        } else if (post.getWriter() != null & post.getCreated_date() != null) {
+            StatementAsResult = defaultStatement + "writer = ? AND ((created_date = ? AND updated_date IS NULL) OR updated_date = ?)"; // 최종 수정일자가 존재할 시 해당 일자를 통해 조회
             statement = connection.prepareStatement(StatementAsResult);
             statement.setString(1, post.getWriter());
             statement.setString(2, post.getCreated_date());
             statement.setString(3, post.getCreated_date());
-        } else { // post.getTitle() != null
-            StatementAsResult = defaultStatement + "title = ? AND ((created_date = ? AND updated_date IS NULL) OR updated_date = ?)";
+        } else { // post.getTitle() != null -> title 은 테이블 내에서 고유함
+            StatementAsResult = defaultStatement + "title = ?";
             statement = connection.prepareStatement(StatementAsResult);
             statement.setString(1, post.getTitle());
-            statement.setString(2, post.getCreated_date());
-            statement.setString(3, post.getCreated_date());
         }
 
         int deletedRow = statement.executeUpdate();
