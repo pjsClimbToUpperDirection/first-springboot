@@ -32,12 +32,7 @@ public class AccountController {
     @PostMapping("/register/request")
     public ResponseEntity<Void> InitRequestForRegistration(@RequestBody UserForm userForm) {
         if (userForm.getUsername() != null && userForm.getPassword() != null && userForm.getEmail() != null) {
-            // 사용자 정보를 redis에 임시로 저장
-            CustomUserDetails details = CustomUserDetails.builder()
-                    .username(userForm.getUsername())
-                    .password(userForm.getPassword())
-                    .email(userForm.getEmail())
-                    .build();
+            // 사용자 정보를 redis 에 임시로 저장
             redisDao.setHashOperations(userForm.getUsername(), "username", userForm.getUsername());
             redisDao.setHashOperations(userForm.getUsername(), "password", userForm.getPassword());
             redisDao.setHashOperations(userForm.getUsername(), "email", userForm.getEmail());
