@@ -45,7 +45,7 @@ public class PostDao {
 
     // 조회 영역이므로 유일하게 본문을 반환
     public ArrayList<Post> lookUpPosts(Post post) throws Exception {
-        ArrayList<Post> postArrayList = null;
+        ArrayList<Post> postArrayList;
         Connection connection;
         connection = dataSource.getConnection();
         PreparedStatement statement;

@@ -81,4 +81,13 @@ public class CustomUserDao {
         statement.executeUpdate();
         connection.close();
     }
+
+    public void DeleteUser(String username) throws Exception {
+        Connection connection;
+        connection = dataSource.getConnection();
+        PreparedStatement statement = connection.prepareStatement("DELETE FROM userdetails WHERE username = ?");
+        statement.setString(1, username);
+        statement.executeUpdate();
+        connection.close();
+    }
 }

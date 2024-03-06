@@ -15,7 +15,6 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.sql.ResultSet;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -82,6 +81,7 @@ public class AccountController {
 
 
 
+    // 로그인 상태에서 추가적인 본인 확인을 위해 비밀번호를 다시 확인
     @PostMapping("/modification/email/request")
     public ResponseEntity<Void> confirmPasswordForModificationOfEmailAddress(@RequestHeader HttpHeaders headers, @RequestBody UserForm userForm) { // dto 내에 email, password 정의
         try {
@@ -133,7 +133,7 @@ public class AccountController {
 
     // 로그인 상태에서 추가적인 본인 확인을 위해 비밀번호를 다시 확인
     @PostMapping("/modification/password/request")
-    public ResponseEntity<Token> confirmationPreviousPW(@RequestHeader HttpHeaders headers, @RequestBody UserForm userForm) { // dto 내에 (기존)password 정의
+    public ResponseEntity<Token> confirmPreviousPasswordForModificationOfPassword(@RequestHeader HttpHeaders headers, @RequestBody UserForm userForm) { // dto 내에 (기존)password 정의
         try {
             String username = jwtUtil.extractUsername(headers.getFirst("Authorization"));
             if (username != null) {
@@ -143,11 +143,11 @@ public class AccountController {
                     if (password != null) {
                         if (password.equals(userForm.getPassword())) { // 요청으로 들어온 암호, username 을 통해 조회한 암호의 일치 여부
                             Map<String, Object> claims = new HashMap<>();
-                            claims.put("For_modification_of", "password");
-                            String TempToken_Pw = jwtUtil.generateTempToken(claims, username, 100);
+                            claims.put("For_modification_of", "password"); // keyOfClaim, value
+                            String TempToken_Mod_Pw = jwtUtil.generateTempToken(claims, username, 100);
                             Token token = Token.builder()
-                                    .accessToken(TempToken_Pw).build(); // accessToken 값에서 임시 토큰 확인 가능
-                            return new ResponseEntity<>(token, httpHeaders, 204);
+                                    .accessToken(TempToken_Mod_Pw).build(); // accessToken 값에서 임시 토큰 확인 가능
+                            return new ResponseEntity<>(token, httpHeaders, 200);
                         } else {
                             return new ResponseEntity<>(null, httpHeaders, 401);
                         }
@@ -155,7 +155,7 @@ public class AccountController {
                         return new ResponseEntity<>(null, httpHeaders, 400);
                     }
                 } catch (Exception e) {
-                    log.warn("at AccountController.modifyPasswordRequest", e);
+                    log.warn("at AccountController.confirmPreviousPasswordForModificationOfPassword", e);
                     return new ResponseEntity<>(null, httpHeaders, 500);
                 }
             } else {
@@ -168,14 +168,16 @@ public class AccountController {
     @PatchMapping("/modification/password/verification")
     public ResponseEntity<Void> modifyPassword (@RequestHeader HttpHeaders headers, @RequestBody UserForm userForm) { // dto 내에 (변경)password 정의
         try {
-            String username = jwtUtil.extractUsername(headers.getFirst("Authorization_Modification_PW"));
-            if (username != null) {
+            String TempToken = headers.getFirst("Authorization_Modification_PW");
+            String username = jwtUtil.extractUsername(TempToken);
+            String purposeSign = jwtUtil.extractSpecificClaim(TempToken, "For_modification_of");
+            if (username != null && Objects.equals(purposeSign, "password")) {
                 userForm.setUsername(username); // 추후 다른 정보로도 조회할 여지를 남기고자 dto 에 값 할당하고 사용
                 try {
                     customUserDao.ModifyPassword(userForm);
                     return new ResponseEntity<>(null, httpHeaders, 200);
                 } catch (Exception e) {
-                    log.warn("at AccountController.modifyPasswordRequest", e);
+                    log.warn("at AccountController.modifyPassword", e);
                     return new ResponseEntity<>(null, httpHeaders, 500);
                 }
             } else {
@@ -186,12 +188,61 @@ public class AccountController {
         }
     }
 
-    /*@DeleteMapping("/deletion/account")
-    public ResponseEntity<Void> deleteAccount(@RequestHeader HttpHeaders headers, @RequestBody UserForm userForm) {
-        String username = jwtUtil.extractUsername(headers.getFirst("Authorization")); // 만료된 토큰 사용 시 예외!
-        if (username != null) {
 
+
+    // 로그인 상태에서 추가적인 본인 확인을 위해 비밀번호를 다시 확인
+    @PostMapping("/deletion/request")
+    public ResponseEntity<Token> ConfirmPasswordForDeletionOfAccount(@RequestHeader HttpHeaders headers, @RequestBody UserForm userForm) { // dto 내에 (기존) password 정의
+        try {
+            String username = jwtUtil.extractUsername(headers.getFirst("Authorization"));
+            if (username != null) {
+                userForm.setUsername(username); // 추후 다른 정보로도 조회할 여지를 남기고자 dto 에 값 할당하고 사용
+                try {
+                    String password = customUserDao.confirmPassword(userForm); // username 을 통해 password 조회
+                    if (password != null) {
+                        if (password.equals(userForm.getPassword())) { // 요청으로 들어온 암호, username 을 통해 조회한 암호의 일치 여부
+                            Map<String, Object> claims = new HashMap<>();
+                            claims.put("For_deletion_of", "account");
+                            String TempToken_Del_Ac = jwtUtil.generateTempToken(claims, username, 100);
+                            Token token = Token.builder()
+                                    .accessToken(TempToken_Del_Ac).build(); // accessToken 값에서 임시 토큰 확인 가능
+                            return new ResponseEntity<>(token, httpHeaders, 200);
+                        } else {
+                            return new ResponseEntity<>(null, httpHeaders, 401);
+                        }
+                    } else {
+                        return new ResponseEntity<>(null, httpHeaders, 400);
+                    }
+                } catch (Exception e) {
+                    log.warn("at AccountController.ConfirmPasswordForDeletionOfAccount", e);
+                    return new ResponseEntity<>(null, httpHeaders, 500);
+                }
+            } else {
+                return new ResponseEntity<>(null, httpHeaders, 401);
+            }
+        } catch (ExpiredJwtException e) {
+            return new ResponseEntity<>(null, headers, 401);
         }
-    }*/
-    // todo 계정 삭제 메서드 구현 필요(인증된 사용자가 해당 사용자인지 확인하는 로직 필요)
+    }
+    @DeleteMapping("/deletion/verification")
+    public ResponseEntity<Void> deleteAccount(@RequestHeader HttpHeaders headers) {
+        try {
+            String TempToken = headers.getFirst("Authorization_Deletion_AC");
+            String username = jwtUtil.extractUsername(TempToken);
+            String purposeSign = jwtUtil.extractSpecificClaim(TempToken, "For_deletion_of");
+            if (username != null && Objects.equals(purposeSign, "account")) {
+                try {
+                    customUserDao.DeleteUser(username);
+                    return new ResponseEntity<>(null, httpHeaders, 200);
+                } catch (Exception e) {
+                    log.warn("at AccountController.deleteAccount", e);
+                    return new ResponseEntity<>(null, httpHeaders, 500);
+                }
+            } else {
+                return new ResponseEntity<>(null, httpHeaders, 401);
+            }
+        } catch (ExpiredJwtException e) {
+            return new ResponseEntity<>(null, headers, 401);
+        }
+    }
 }

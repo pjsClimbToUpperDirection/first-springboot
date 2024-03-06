@@ -42,6 +42,13 @@ public class jwtUtil {
     public String generateTempToken(Map<String, Object> claims, String subject, Integer validedPeriod) {
         return createToken(claims, subject, validedPeriod);
     }
+    public String extractSpecificClaim(String token, String keyOfClaim) {
+        return Jwts.parser() // return Classes.newInstance("io.jsonwebtoken.impl.DefaultJwtParserBuilder")
+                .verifyWith(key) // Sets the signature verification SecretKey used to verify all encountered JWS signatures
+                .build()
+                .parseSignedClaims(token) // io.jsonwebtoken.JwtException 예외 발생 가능성 (토큰이 유효하지 않은 등의 이유)
+                .getPayload().get(keyOfClaim, String.class); // 본문 추출, 타 함수에서 사용
+    }
     // 토큰의 유효성을 검증하는 함수 -> 최초로 외부 요청을 받아 필요한 메서드들을 사용, 검증을 수행함
     public Boolean validateToken(String token, UserDetails userDetails) throws JwtException {
         final String username = extractUsername(token); // 토큰이 유효하지 않을 시 extractAllClaims 에서 예외
@@ -51,6 +58,10 @@ public class jwtUtil {
     public Boolean isTokenExpired(String token) {
         return extractExpiration(token).before(new Date());
     }
+
+
+
+
 
 
 
