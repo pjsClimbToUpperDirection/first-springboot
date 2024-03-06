@@ -24,7 +24,7 @@ public class AuthenticationNumberCreator {
     }
 
     public String AuthNumberVerifier(AuthNumberVerification authNumberVerification) {
-        // 인증번호가 조회될 시 true 반환
+        // 인증번호가 조회될 시 본문(username) 반환
         return redisDao.getValues(authNumberVerification.getNum1() + "-" + authNumberVerification.getNum2());
     }
 }

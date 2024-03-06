@@ -1,5 +1,6 @@
 package com.example.demo123.data.dao;
 
+import com.example.demo123.component.Translater;
 import com.example.demo123.config.DbConfig;
 import com.example.demo123.data.dto.Post;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
@@ -17,7 +18,10 @@ import java.util.*;
 // 정의된 다음 네 가지 메서드 이외에 추가 메서드 작성은 지양할 것
 @Repository
 public class PostDao {
-    public PostDao(){}
+    private final Translater translater;
+    public PostDao(Translater translater){
+        this.translater = translater;
+    }
     AnnotationConfigApplicationContext ctx = new AnnotationConfigApplicationContext(DbConfig.class);
     DataSource dataSource = ctx.getBean("dataSource", DataSource.class);
 
@@ -40,7 +44,8 @@ public class PostDao {
     }
 
     // 조회 영역이므로 유일하게 본문을 반환
-    public ResultSet lookUpPosts(Post post) throws Exception {
+    public ArrayList<Post> lookUpPosts(Post post) throws Exception {
+        ArrayList<Post> postArrayList = null;
         Connection connection;
         connection = dataSource.getConnection();
         PreparedStatement statement;
@@ -90,14 +95,14 @@ public class PostDao {
         }
 
         ResultSet selectedRow = statement.executeQuery();
+        postArrayList = translater.ForResultSet(selectedRow);
         connection.close();
-
-        return selectedRow;
+        return postArrayList;
     }
 
 
     // 제목은 수정할수 없도록 함, 업로드 시 작성한 제목(unique)을 사용하여 기존 게시글 조회, 갱신
-    public void updatePost(Post newOne) throws Exception{
+    public void updatePost(Post newOne) throws Exception {
         Connection connection;
         connection = dataSource.getConnection();
         PreparedStatement statement = connection.prepareStatement("UPDATE posts SET content = ?, updated_date = ? WHERE writer = ? AND title = ?");

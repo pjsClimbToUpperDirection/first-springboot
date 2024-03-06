@@ -42,7 +42,7 @@ public class GetController {
         }
 
         try { // todo 서비스 레이어가 필요할 시 Dao 분리
-            return new ResponseEntity<>(translater.ForResultSet(postDao.lookUpPosts(post)), httpHeaders, 200);
+            return new ResponseEntity<>(postDao.lookUpPosts(post), httpHeaders, 200);
         } catch (Exception e) {
             log.warn("at GetController.lookUpPosts: ", e);
             return new ResponseEntity<>(null, httpHeaders, 500);

@@ -38,6 +38,10 @@ public class jwtUtil {
     public String generateRefresh(@Nullable Map<String, Object> claims, Integer validedPeriod) {
         return createToken(claims, null, validedPeriod);
     }
+    // 다목적 임시 토큰 발급, 클래임을 반드시 하나 이상 작성할 것
+    public String generateTempToken(Map<String, Object> claims, String subject, Integer validedPeriod) {
+        return createToken(claims, subject, validedPeriod);
+    }
     // 토큰의 유효성을 검증하는 함수 -> 최초로 외부 요청을 받아 필요한 메서드들을 사용, 검증을 수행함
     public Boolean validateToken(String token, UserDetails userDetails) throws JwtException {
         final String username = extractUsername(token); // 토큰이 유효하지 않을 시 extractAllClaims 에서 예외
