@@ -2,9 +2,11 @@ package com.example.demo123.controller;
 
 
 import com.example.demo123.component.jwt.*;
+import com.example.demo123.data.dao.CustomUserDao;
 import com.example.demo123.data.dao.RedisDao;
 import com.example.demo123.data.dto.controller.AuthenticationRequest;
 import com.example.demo123.data.dto.Token;
+import com.example.demo123.data.dto.controller.UserForm;
 import io.jsonwebtoken.ExpiredJwtException;
 import org.springframework.beans.factory.annotation.Value;
 import lombok.extern.slf4j.Slf4j;
@@ -20,6 +22,9 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.authentication.AuthenticationManager;
 
+import java.util.HashMap;
+import java.util.Map;
+
 @Slf4j
 @PropertySource("classpath:application.properties")
 @RestController
@@ -30,16 +35,18 @@ public class AuthenticationController {
     private final UserDetailsService userDetailsService;
     private final jwtUtil jwtUtil;
     private final RedisDao redisDao;
+    private final CustomUserDao customUserDao;
 
     @Value("${jwt.validedPeriod}")
     private Integer validedPeriod;
 
-    public AuthenticationController(AuthenticationManager authenticationManager, UserDetailsService userDetailsService, jwtUtil jwtUtil, HttpHeaders httpHeaders, RedisDao redisDao) {
+    public AuthenticationController(AuthenticationManager authenticationManager, UserDetailsService userDetailsService, jwtUtil jwtUtil, HttpHeaders httpHeaders, RedisDao redisDao, CustomUserDao customUserDao) {
         this.authenticationManager = authenticationManager;
         this.userDetailsService = userDetailsService;
         this.jwtUtil = jwtUtil;
         this.httpHeaders = httpHeaders;
         this.redisDao = redisDao;
+        this.customUserDao = customUserDao;
     }
 
     // 토큰 발급, 무효화 양쪽 모두 인증 절차를 거쳐야 한다.
@@ -98,5 +105,41 @@ public class AuthenticationController {
             }
         }
         return new ResponseEntity<>(null, httpHeaders, 204);
+    }
+
+
+    // 로그인 상태에서 추가적인 본인 확인을 위해 비밀번호를 다시 확인
+    @PostMapping("/verification")
+    public ResponseEntity<Token> re_verification(@RequestHeader HttpHeaders headers, @RequestBody UserForm userForm) { // dto 내부에 password 정의
+        try {
+            String username = jwtUtil.extractUsername(headers.getFirst("Authorization"));
+            if (username != null) {
+                userForm.setUsername(username); // 추후 다른 정보로도 조회할 여지를 남기고자 dto 에 값 할당하고 사용
+                try {
+                    String password = customUserDao.confirmPassword(userForm); // username 을 통해 password 조회
+                    if (password != null) {
+                        if (password.equals(userForm.getPassword())) { // 요청으로 들어온 암호, username 을 통해 조회한 암호의 일치 여부
+                            Map<String, Object> claims = new HashMap<>();
+                            claims.put("For", "re_verification"); // keyOfClaim, value
+                            String TempToken_Mod_Pw = jwtUtil.generateTempToken(claims, username, 100); // 100초
+                            Token token = Token.builder()
+                                    .accessToken(TempToken_Mod_Pw).build(); // accessToken 값에서 임시 토큰 확인 가능
+                            return new ResponseEntity<>(token, httpHeaders, 200);
+                        } else {
+                            return new ResponseEntity<>(null, httpHeaders, 401);
+                        }
+                    } else {
+                        return new ResponseEntity<>(null, httpHeaders, 400);
+                    }
+                } catch (Exception e) {
+                    log.warn("at AuthenticationController.re_verification", e);
+                    return new ResponseEntity<>(null, httpHeaders, 500);
+                }
+            } else {
+                return new ResponseEntity<>(null, httpHeaders, 401);
+            }
+        } catch (ExpiredJwtException e) {
+            return new ResponseEntity<>(null, headers, 401);
+        }
     }
 }
