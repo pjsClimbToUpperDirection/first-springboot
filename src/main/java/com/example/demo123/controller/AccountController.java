@@ -15,6 +15,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Objects;
+import java.util.regex.Pattern;
 
 @Slf4j
 @PropertySource("classpath:application.properties")
@@ -40,15 +41,22 @@ public class AccountController {
 
     @PostMapping("/register/request")
     public ResponseEntity<Void> InitRequestForRegistration(@RequestBody UserForm userForm) {
-        if (userForm.getUsername() != null && userForm.getPassword() != null && userForm.getEmail() != null) {  // 사용자 정보를 redis 에 임시로 저장
-            redisDao.setHashOperations(userForm.getUsername() + "_for_register", "username", userForm.getUsername());
-            redisDao.setHashOperations(userForm.getUsername() + "_for_register", "password", userForm.getPassword());
-            redisDao.setHashOperations(userForm.getUsername() + "_for_register", "email", userForm.getEmail());
+        String emailPattern = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$";
+        if (userForm.getUsername() != null && userForm.getPassword() != null && userForm.getEmail() != null && Pattern.compile(emailPattern).matcher(userForm.getEmail()).matches()) {
+            // 해당 사용자 이름으로 이미 계정 생성을 시도하는 중일 시 같은 사용자 이름의 요청을 막아 계정 정보 오염 방지
+            if (!Objects.equals(redisDao.getHashOperations(userForm.getUsername() + "_for_register", "username"), userForm.getUsername())) {
+                // 사용자 정보를 redis 에 임시로 저장
+                redisDao.setHashOperations(userForm.getUsername() + "_for_register", "username", userForm.getUsername());
+                redisDao.setHashOperations(userForm.getUsername() + "_for_register", "password", userForm.getPassword());
+                redisDao.setHashOperations(userForm.getUsername() + "_for_register", "email", userForm.getEmail());
 
-            redisDao.setExpireTime(userForm.getUsername(), 90); // 90초 (인증번호는 70초)
+                redisDao.setExpireTime(userForm.getUsername() + "_for_register", 90); // 90초 (인증번호는 70초)
 
-            authenticationNumberCreator.AuthNumberCreation(userForm.getEmail(), "최초 가입 시 이메일 인증을 위한 인증번호", userForm.getUsername());
-            return new ResponseEntity<>(null, httpHeaders, 204);
+                authenticationNumberCreator.AuthNumberCreation(userForm.getEmail(), "최초 가입 시 이메일 인증을 위한 인증번호", userForm.getUsername());
+                return new ResponseEntity<>(null, httpHeaders, 204);
+            } else {
+                return new ResponseEntity<>(null, httpHeaders, 409); // 409 Conflict (같은 사용자 이름으로 타인이 계정 생성 시도 중)
+            }
         } else {
             log.warn("some argument that we require is not given to us");
             return new ResponseEntity<>(null, httpHeaders, 400);
@@ -82,12 +90,13 @@ public class AccountController {
     @PostMapping("/modification/email/request")
     public ResponseEntity<Void> confirmPasswordForModificationOfEmailAddress(@RequestHeader HttpHeaders headers, @RequestBody UserForm userForm) { // dto 내에 email 정의
         try {
-            String TempToken = headers.getFirst("Authorization_Modification_PW");
+            String TempToken = headers.getFirst("Authorization_Modification_Email");
             String usernameFromTemp = jwtUtil.extractUsername(TempToken);
             String username = jwtUtil.extractUsername(headers.getFirst("Authorization"));
             String purposeSign = jwtUtil.extractSpecificClaim(TempToken, "For");
             if (Objects.equals(usernameFromTemp, username) && Objects.equals(purposeSign, "re_verification")) {
                 authenticationNumberCreator.AuthNumberCreation(userForm.getEmail(), "이메일 주소 변경시 주소의 유효함을 검증하기 위한 인증번호", username); // 인증번호 전송
+                redisDao.setValues(username + "_for_modification_of_emailAddress", userForm.getEmail(), 90); // 90초 (인증번호는 70초)
                 return new ResponseEntity<>(null, headers, 204);
             } else {
                 return new ResponseEntity<>(null, httpHeaders, 401);
@@ -101,12 +110,17 @@ public class AccountController {
     public ResponseEntity<Void> modifyEmailAddress(@RequestBody AuthNumberVerification authNumberVerification) {
         String username = authenticationNumberCreator.AuthNumberVerifier(authNumberVerification);
         if (username != null) { // 인증번호가 정확할 시
-            try {
-                customUserDao.ModifyEmailAddress(redisDao.getValues(username + "_for_modification_of_emailAddress"), username);
-                return new ResponseEntity<>(null, httpHeaders, 200);
-            } catch (Exception e) {
-                log.warn("at AccountController.modifyEmailAddress", e);
-                return new ResponseEntity<>(null, httpHeaders, 500);
+            String Address = redisDao.getValues(username + "_for_modification_of_emailAddress");
+            if (Address != null) { // 임시 저장된 이메일 주소의 유효기간 만료 등의 이유로 자료를 찾을 수 없는 경우에 대응
+                try {
+                    customUserDao.ModifyEmailAddress(redisDao.getValues(username + "_for_modification_of_emailAddress"), username);
+                    return new ResponseEntity<>(null, httpHeaders, 200);
+                } catch (Exception e) {
+                    log.warn("at AccountController.modifyEmailAddress", e);
+                    return new ResponseEntity<>(null, httpHeaders, 500);
+                }
+            } else {
+                return new ResponseEntity<>(null, httpHeaders, 404); // 해당 인증번호로 이메일 주소를 조회할 수 없을 시
             }
         } else {
             return new ResponseEntity<>(null, httpHeaders, 401);
@@ -139,6 +153,7 @@ public class AccountController {
             return new ResponseEntity<>(null, headers, 401);
         }
     }
+
 
 
 
