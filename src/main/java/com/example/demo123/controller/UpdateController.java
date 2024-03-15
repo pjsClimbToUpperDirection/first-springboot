@@ -3,6 +3,7 @@ package com.example.demo123.controller;
 import com.example.demo123.component.jwt.jwtUtil;
 import com.example.demo123.data.dao.PostDao;
 import com.example.demo123.data.dto.Post;
+import io.jsonwebtoken.ExpiredJwtException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
@@ -24,25 +25,27 @@ public class UpdateController {
         this.jwtUtil = jwtUtil;
     }
 
-    // 4가지 인자를 전부 요구함
     @PatchMapping("/updatePost")
     public ResponseEntity<Void> UpdatePost(@RequestHeader HttpHeaders headers ,@RequestBody Post post){
-        if (Objects.equals(jwtUtil.extractUsername(headers.getFirst("Authorization")), post.getWriter())) { // 'jwt 에서 추출한 이름', '요청 본문 저자' 가 같을 시 실행
-            if (post.getTitle() != null && post.getContent() != null) {
-                try {
-                    // todo 서비스 레이어가 필요할 시 분리
-                    postDao.updatePost(post);
-                    return new ResponseEntity<>(null, httpHeaders, 200);
-                } catch (Exception e) {
-                    log.warn("at UpdateController.UpdatePosts: ", e);
-                }
+        String username;
+        // 토큰 만료 여부와 상관없이 사용자 이름을 추출하도록 구현됨
+        try {
+            username = jwtUtil.extractUsername(headers.getFirst("Authorization")); // jwt 에서 사용자 이름 추출
+        } catch (ExpiredJwtException e) {
+            username = e.getClaims().getSubject();
+        }
+        if (post.getTitle() != null && post.getContent() != null) {
+            try {
+                // todo 서비스 레이어가 필요할 시 분리
+                post.setWriter(username);
+                postDao.updatePost(post);
+                return new ResponseEntity<>(null, httpHeaders, 200);
+            } catch (Exception e) {
+                log.warn("at UpdateController.UpdatePosts: ", e);
                 return new ResponseEntity<>(null, httpHeaders, 500);
-            } else {
-                log.warn("original title, content that we will update must be defined");
-                return new ResponseEntity<>(null, httpHeaders, 400);
             }
         } else {
-            return new ResponseEntity<>(null, httpHeaders, 401);
+            return new ResponseEntity<>(null, httpHeaders, 400);
         }
     }
 }

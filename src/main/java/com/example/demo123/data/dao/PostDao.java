@@ -31,12 +31,11 @@ public class PostDao {
     public void InsertPost(Post post) throws Exception{
         Connection connection;
         connection = dataSource.getConnection();
-        PreparedStatement statement = connection.prepareStatement("INSERT INTO posts (writer, email, title, content, created_date) VALUES (?, ?, ?, ?, ?)");
+        PreparedStatement statement = connection.prepareStatement("INSERT INTO posts (writer, title, content, created_date) VALUES (?, ?, ?, ?)");
         statement.setString(1, post.getWriter());
-        statement.setString(2, post.getEmail());
-        statement.setString(3, post.getTitle());
-        statement.setString(4, post.getContent());
-        statement.setString(5, date.format(now));
+        statement.setString(2, post.getTitle());
+        statement.setString(3, post.getContent());
+        statement.setString(4, date.format(now));
         int insertedRow = statement.executeUpdate();
 
         System.out.println("INSERTED_rows_number: " + insertedRow);

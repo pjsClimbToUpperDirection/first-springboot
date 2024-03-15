@@ -16,7 +16,6 @@ public class Translater {
             Post post = new Post();
             post.setPost_id(selectedRow.getInt("post_id"));
             post.setWriter(selectedRow.getString("writer"));
-            post.setEmail(selectedRow.getString("email"));
             post.setTitle(selectedRow.getString("title"));
             post.setContent(selectedRow.getString("content"));
             post.setCreated_date(selectedRow.getString("created_date"));

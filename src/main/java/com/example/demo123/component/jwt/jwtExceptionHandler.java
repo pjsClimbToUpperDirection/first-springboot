@@ -1,5 +1,6 @@
 package com.example.demo123.component.jwt;
 
+import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -26,6 +27,10 @@ public class jwtExceptionHandler extends OncePerRequestFilter {
     }
 
     private void handleError(HttpServletResponse response, Exception e) throws IOException {
+        if (e instanceof ExpiredJwtException) {
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.getWriter().write("Refresh Token Expired");
+        }
         // 기타 예외 처리
         response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
         response.getWriter().write("Internal Server Error");
