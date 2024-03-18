@@ -21,6 +21,8 @@ public class CustomUserDetails implements UserDetails {
     private boolean emailVerified;
     private boolean locked;
     private String role; // u, su
+    private String created_date;
+    private String last_modified;
 
     @Override
     public Set<GrantedAuthority> getAuthorities() {

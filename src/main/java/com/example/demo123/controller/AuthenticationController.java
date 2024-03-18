@@ -4,8 +4,9 @@ package com.example.demo123.controller;
 import com.example.demo123.component.jwt.*;
 import com.example.demo123.data.dao.CustomUserDao;
 import com.example.demo123.data.dao.RedisDao;
+import com.example.demo123.data.dto.CustomUserDetails;
+import com.example.demo123.data.dto.TokenWithSomeUserDetails;
 import com.example.demo123.data.dto.controller.AuthenticationRequest;
-import com.example.demo123.data.dto.Token;
 import com.example.demo123.data.dto.controller.UserForm;
 import io.jsonwebtoken.ExpiredJwtException;
 import org.springframework.beans.factory.annotation.Value;
@@ -16,7 +17,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -52,7 +52,7 @@ public class AuthenticationController {
     // 토큰 발급, 무효화 양쪽 모두 인증 절차를 거쳐야 한다.
 
     @PostMapping("/issue")
-    public ResponseEntity<Token> issueJwtToken(@RequestBody AuthenticationRequest authenticationRequest) {
+    public ResponseEntity<TokenWithSomeUserDetails> issueJwtToken(@RequestBody AuthenticationRequest authenticationRequest) {
         // ---- 여기부터
         try {
             // 반환 객체를 참조하는 필드를 지정하지 않는다, 예외가 발생하지 않을 시 인증된 것으로 간주한다.
@@ -72,20 +72,22 @@ public class AuthenticationController {
         // ---- 여기까지 인증 관련 영역
 
         // id, pw 유효할 시 사용자 정보를 가져옴
-        final UserDetails userDetails = userDetailsService.loadUserByUsername(authenticationRequest.getUsername());
+        final CustomUserDetails customUserDetails = (CustomUserDetails) userDetailsService.loadUserByUsername(authenticationRequest.getUsername());
 
         // jwt, refresh 발급 (유효기간 100, 1000초)
-        String Access = jwtUtil.generateJwt(null, userDetails, validedPeriod);
+        String Access = jwtUtil.generateJwt(null, customUserDetails, validedPeriod);
         String Refresh = jwtUtil.generateRefresh(null, validedPeriod * 10);
-        Token token = Token.builder()
+        TokenWithSomeUserDetails tokenWithSomeUserDetails = TokenWithSomeUserDetails.builder()
                 .accessToken(Access)
-                .refreshToken(Refresh).build();
-        // todo 필요할 시 try catch 사용한 예외 핸들링
+                .refreshToken(Refresh)
+                .email(customUserDetails.getEmail())
+                .created_date(customUserDetails.getCreated_date())
+                .last_modified(customUserDetails.getLast_modified()).build(); // 로그인 시 이메일 주소, 비밀번호 수정일자 등 사용자 세부 정보를 얻어올수 있음
         redisDao.deleteHashOperations("refresh", authenticationRequest.getUsername());
         // refresh Token 을 redis 에 저장
         redisDao.setHashOperations("refresh", authenticationRequest.getUsername(), Refresh);
 
-        return new ResponseEntity<>(token, httpHeaders, 200);
+        return new ResponseEntity<>(tokenWithSomeUserDetails, httpHeaders, 200);
     }
 
     @PostMapping("/logout")
@@ -110,7 +112,7 @@ public class AuthenticationController {
 
     // 로그인 상태에서 추가적인 본인 확인을 위해 비밀번호를 다시 확인
     @PostMapping("/verification")
-    public ResponseEntity<Token> re_verification(@RequestHeader HttpHeaders headers, @RequestBody UserForm userForm) { // dto 내부에 password 정의
+    public ResponseEntity<TokenWithSomeUserDetails> re_verification(@RequestHeader HttpHeaders headers, @RequestBody UserForm userForm) { // dto 내부에 password 정의
         try {
             String username = jwtUtil.extractUsername(headers.getFirst("Authorization"));
             if (username != null) {
@@ -122,9 +124,9 @@ public class AuthenticationController {
                             Map<String, Object> claims = new HashMap<>();
                             claims.put("For", "re_verification"); // keyOfClaim, value
                             String TempToken_Mod_Pw = jwtUtil.generateTempToken(claims, username, 100); // 100초
-                            Token token = Token.builder()
+                            TokenWithSomeUserDetails tokenWithUserDetails = TokenWithSomeUserDetails.builder()
                                     .accessToken(TempToken_Mod_Pw).build(); // accessToken 값에서 임시 토큰 확인 가능
-                            return new ResponseEntity<>(token, httpHeaders, 200);
+                            return new ResponseEntity<>(tokenWithUserDetails, httpHeaders, 200);
                         } else {
                             return new ResponseEntity<>(null, httpHeaders, 401);
                         }

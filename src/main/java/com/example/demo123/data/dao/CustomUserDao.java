@@ -23,13 +23,28 @@ public class CustomUserDao {
     Date now = new Date();
     SimpleDateFormat date = new SimpleDateFormat("yy-MM-dd-HH-mm"); // string 타입
 
-    // todo resultSet 인스턴스 반환하지 않도록 수정하기
-    public ResultSet findUserDetailsByUserName(String username) throws Exception { // 해당 메서드 호출 시 반드시 close() 메서드 사용하여 ResultSet 을 닫을 것
+
+    public CustomUserDetails findUserDetailsByUserName(String username) throws Exception {
+        ResultSet resultSet;
         Connection connection;
         connection = dataSource.getConnection();
         PreparedStatement statement = connection.prepareStatement("SELECT * FROM userdetails WHERE username = ?");
         statement.setString(1, username);
-        return statement.executeQuery();
+        resultSet = statement.executeQuery();
+        if (resultSet.next()) {
+            return CustomUserDetails.builder()
+                    .id(resultSet.getString(1))
+                    .username(resultSet.getString(2))
+                    .password(resultSet.getString(3))
+                    .email(resultSet.getString(4))
+                    .emailVerified(resultSet.getBoolean(5))
+                    .locked(resultSet.getBoolean(6))
+                    .role(resultSet.getString(7))
+                    .created_date(resultSet.getString(8))
+                    .last_modified(resultSet.getString(9))
+                    .build();
+        }
+        return null;
     }
 
     public void createUser(CustomUserDetails customUserDetails) throws Exception {
@@ -61,23 +76,25 @@ public class CustomUserDao {
         return password;
     }
 
-    public void ModifyEmailAddress(String newAddress, String username) throws Exception {
+    public void ModifyPassword(UserForm userForm) throws Exception {
         Connection connection;
         connection = dataSource.getConnection();
-        PreparedStatement statement = connection.prepareStatement("UPDATE userdetails SET email = ?, emailverified = ? WHERE username = ?");
-        statement.setString(1, newAddress);
-        statement.setBoolean(2, true);
-        statement.setString(3, username);
+        PreparedStatement statement = connection.prepareStatement("UPDATE userdetails SET password = ?, last_modified_date = ? WHERE username = ?");
+        statement.setString(1, userForm.getPassword()); // 변경될 pw
+        statement.setString(2, date.format(now) + "_00"); // 최종 수정일자 (비밀번호)
+        statement.setString(3, userForm.getUsername());
         statement.executeUpdate();
         connection.close();
     }
 
-    public void ModifyPassword(UserForm userForm) throws Exception {
+    public void ModifyEmailAddress(String newAddress, String username) throws Exception {
         Connection connection;
         connection = dataSource.getConnection();
-        PreparedStatement statement = connection.prepareStatement("UPDATE userdetails SET password = ? WHERE username = ?");
-        statement.setString(1, userForm.getPassword()); // 변경될 pw
-        statement.setString(2, userForm.getUsername());
+        PreparedStatement statement = connection.prepareStatement("UPDATE userdetails SET email = ?, emailverified = ?, last_modified_date = ? WHERE username = ?");
+        statement.setString(1, newAddress);
+        statement.setBoolean(2, true);
+        statement.setString(3, date.format(now) + "_01"); // 최종 수정일자 (이메일 주소)
+        statement.setString(4, username);
         statement.executeUpdate();
         connection.close();
     }
