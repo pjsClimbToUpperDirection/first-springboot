@@ -3,6 +3,7 @@ package com.example.demo123.controller;
 import com.example.demo123.component.jwt.jwtUtil;
 import com.example.demo123.data.dao.PostDao;
 import com.example.demo123.data.dto.Post;
+import io.jsonwebtoken.ExpiredJwtException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
@@ -24,25 +25,27 @@ public class DeleteController {
         this.jwtUtil = jwtUtil;
     }
 
-    //  '저자, 글 제목, 날짜(생성 혹은 최근 수정일)'을 인자로 받음, 무분별한 삭제를 방지하고자 세 조건 모두가 명확히 주어지지 않았을 시 삭제하지 않음
+    // 요청 본문에는 게시글의 제목만 요구됨
     @DeleteMapping("/deletePost")
-    public ResponseEntity<Void> DeletePost (@RequestHeader HttpHeaders headers, @RequestBody Post post) {
-        if (Objects.equals(jwtUtil.extractUsername(headers.getFirst("Authorization")), post.getWriter())) { // 'jwt 에서 추출한 이름', '요청 본문 저자' 가 같을 시 실행
-            if ((post.getWriter() != null && post.getTitle() != null) || (post.getWriter() != null && post.getCreated_date() != null)) {
-                try {
-                    // todo 서비스 레이어가 필요할 시 분리
-                    postDao.DeletePost(post);
-                    return new ResponseEntity<>(null, httpHeaders, 204);
-                } catch (Exception e) {
-                    log.warn("at DeleteController.DeletePost: ", e);
-                }
-                return new ResponseEntity<>(null, httpHeaders, 500);
-            } else {
-                log.warn("writer and one of title and date must be defined");
-                return new ResponseEntity<>(null, httpHeaders, 400);
+    public ResponseEntity<Void> DeletePost (@RequestHeader HttpHeaders headers, @RequestBody Post post) { // title 만 요구됨
+        String username;
+        try {
+            username = jwtUtil.extractUsername(headers.getFirst("Authorization")); // jwt 에서 사용자 이름 추출
+        } catch (ExpiredJwtException e) {
+            username = e.getClaims().getSubject();
+        }
+        if (username != null && post.getTitle() != null) {
+            post.setWriter(username);
+            try {
+                // todo 서비스 레이어가 필요할 시 분리
+                postDao.DeletePost(post);
+                return new ResponseEntity<>(null, httpHeaders, 204);
+            } catch (Exception e) {
+                log.warn("at DeleteController.DeletePost: ", e);
             }
+            return new ResponseEntity<>(null, httpHeaders, 500);
         } else {
-            return new ResponseEntity<>(null, httpHeaders, 401);
+            return new ResponseEntity<>(null, httpHeaders, 400);
         }
     }
 }

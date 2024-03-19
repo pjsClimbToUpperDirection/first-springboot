@@ -102,8 +102,7 @@ public class PostDao {
 
     // 제목은 수정할수 없도록 함, 업로드 시 작성한 제목(unique)을 사용하여 기존 게시글 조회, 갱신
     public void updatePost(Post newOne) throws Exception {
-        Connection connection;
-        connection = dataSource.getConnection();
+        Connection connection = dataSource.getConnection();
         PreparedStatement statement = connection.prepareStatement("UPDATE posts SET content = ?, updated_date = ? WHERE writer = ? AND title = ?");
         statement.setString(1, newOne.getContent());
         statement.setString(2, date.format(now));
@@ -115,26 +114,23 @@ public class PostDao {
         connection.close();
     }
     public void DeletePost(Post post) throws Exception {
-        PreparedStatement statement;
         Connection connection = dataSource.getConnection();
         String defaultStatement = "DELETE FROM posts WHERE ";
         String StatementAsResult;
-        if (post.getWriter() != null & post.getTitle() != null) {
-            StatementAsResult = defaultStatement + "writer = ? AND title = ?";
-            statement = connection.prepareStatement(StatementAsResult);
-            statement.setString(1, post.getWriter());
-            statement.setString(2, post.getTitle());
-        } else if (post.getWriter() != null & post.getCreated_date() != null) {
-            StatementAsResult = defaultStatement + "writer = ? AND ((created_date = ? AND updated_date IS NULL) OR updated_date = ?)"; // 최종 수정일자가 존재할 시 해당 일자를 통해 조회
-            statement = connection.prepareStatement(StatementAsResult);
-            statement.setString(1, post.getWriter());
-            statement.setString(2, post.getCreated_date());
-            statement.setString(3, post.getCreated_date());
-        } else { // post.getTitle() != null -> title 은 테이블 내에서 고유함
-            StatementAsResult = defaultStatement + "title = ?";
-            statement = connection.prepareStatement(StatementAsResult);
-            statement.setString(1, post.getTitle());
-        }
+        StatementAsResult = defaultStatement + "writer = ? AND title = ?";
+        PreparedStatement statement = connection.prepareStatement(StatementAsResult);
+        statement.setString(1, post.getWriter());
+        statement.setString(2, post.getTitle());
+
+        int deletedRow = statement.executeUpdate();
+        System.out.println("DELETED_rows_number: " + deletedRow);
+        connection.close();
+    }
+
+    public void DeleteAllPosts(String username) throws Exception {
+        Connection connection = dataSource.getConnection();
+        PreparedStatement statement = connection.prepareStatement("DELETE FROM posts WHERE writer = ?");
+        statement.setString(1, username);
 
         int deletedRow = statement.executeUpdate();
         System.out.println("DELETED_rows_number: " + deletedRow);

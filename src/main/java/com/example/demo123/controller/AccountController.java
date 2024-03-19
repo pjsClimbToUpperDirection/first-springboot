@@ -2,6 +2,7 @@ package com.example.demo123.controller;
 
 import com.example.demo123.component.jwt.jwtUtil;
 import com.example.demo123.data.dao.CustomUserDao;
+import com.example.demo123.data.dao.PostDao;
 import com.example.demo123.data.dao.RedisDao;
 import com.example.demo123.data.dto.CustomUserDetails;
 import com.example.demo123.data.dto.controller.AuthNumberVerification;
@@ -27,13 +28,15 @@ public class AccountController {
     private final RedisDao redisDao;
     private final AuthenticationNumberCreator authenticationNumberCreator;
     private final jwtUtil jwtUtil;
+    private final PostDao postDao;
 
-    public AccountController(HttpHeaders httpHeaders, CustomUserDao customUserDao, RedisDao redisDao, AuthenticationNumberCreator authenticationNumberCreator, jwtUtil jwtUtil) {
+    public AccountController(HttpHeaders httpHeaders, CustomUserDao customUserDao, RedisDao redisDao, AuthenticationNumberCreator authenticationNumberCreator, jwtUtil jwtUtil, PostDao postDao) {
         this.httpHeaders = httpHeaders;
         this.customUserDao = customUserDao;
         this.redisDao = redisDao;
         this.authenticationNumberCreator = authenticationNumberCreator;
         this.jwtUtil = jwtUtil;
+        this.postDao = postDao;
     }
 
 
@@ -90,9 +93,14 @@ public class AccountController {
     @PostMapping("/modification/email/request")
     public ResponseEntity<Void> confirmPasswordForModificationOfEmailAddress(@RequestHeader HttpHeaders headers, @RequestBody UserForm userForm) { // dto 내에 email 정의
         try {
+            String username;
+            try {
+                username = jwtUtil.extractUsername(headers.getFirst("Authorization")); // jwt 에서 사용자 이름 추출
+            } catch (ExpiredJwtException e) {
+                username = e.getClaims().getSubject();
+            }
             String TempToken = headers.getFirst("Authorization_Modification_Email");
             String usernameFromTemp = jwtUtil.extractUsername(TempToken);
-            String username = jwtUtil.extractUsername(headers.getFirst("Authorization"));
             String purposeSign = jwtUtil.extractSpecificClaim(TempToken, "For");
             if (Objects.equals(usernameFromTemp, username) && Objects.equals(purposeSign, "re_verification")) {
                 authenticationNumberCreator.AuthNumberCreation(userForm.getEmail(), "이메일 주소 변경시 주소의 유효함을 검증하기 위한 인증번호", username); // 인증번호 전송
@@ -101,7 +109,7 @@ public class AccountController {
             } else {
                 return new ResponseEntity<>(null, httpHeaders, 401);
             }
-        } catch (ExpiredJwtException e) {
+        } catch (ExpiredJwtException e) { // 임시 토큰의 유효기간이 만료된 경우
             return new ResponseEntity<>(null, headers, 401);
         }
     }
@@ -133,15 +141,20 @@ public class AccountController {
     @PatchMapping("/modification/password/request")
     public ResponseEntity<Void> modifyPassword (@RequestHeader HttpHeaders headers, @RequestBody UserForm userForm) { // dto 내에 (변경)password 정의
         try {
+            String username;
+            try {
+                username = jwtUtil.extractUsername(headers.getFirst("Authorization")); // jwt 에서 사용자 이름 추출
+            } catch (ExpiredJwtException e) {
+                username = e.getClaims().getSubject();
+            }
             String TempToken = headers.getFirst("Authorization_Modification_PW");
             String usernameFromTemp = jwtUtil.extractUsername(TempToken);
-            String username = jwtUtil.extractUsername(headers.getFirst("Authorization"));
             String purposeSign = jwtUtil.extractSpecificClaim(TempToken, "For");
             if (Objects.equals(usernameFromTemp, username) && Objects.equals(purposeSign, "re_verification")) {
                 userForm.setUsername(username); // 추후 다른 정보로도 조회할 여지를 남기고자 dto 에 값 할당하고 사용
                 try {
                     customUserDao.ModifyPassword(userForm);
-                    return new ResponseEntity<>(null, httpHeaders, 200);
+                    return new ResponseEntity<>(null, httpHeaders, 204);
                 } catch (Exception e) {
                     log.warn("at AccountController.modifyPassword", e);
                     return new ResponseEntity<>(null, httpHeaders, 500);
@@ -149,7 +162,7 @@ public class AccountController {
             } else {
                 return new ResponseEntity<>(null, httpHeaders, 401);
             }
-        } catch (ExpiredJwtException e) {
+        } catch (ExpiredJwtException e) { // 임시 토큰의 유효기간이 만료된 경우
             return new ResponseEntity<>(null, headers, 401);
         }
     }
@@ -160,22 +173,28 @@ public class AccountController {
     @DeleteMapping("/deletion/request")
     public ResponseEntity<Void> deleteAccount(@RequestHeader HttpHeaders headers) {
         try {
+            String username;
+            try {
+                username = jwtUtil.extractUsername(headers.getFirst("Authorization")); // jwt 에서 사용자 이름 추출
+            } catch (ExpiredJwtException e) {
+                username = e.getClaims().getSubject();
+            }
             String TempToken = headers.getFirst("Authorization_Deletion_AC");
             String usernameFromTemp = jwtUtil.extractUsername(TempToken);
-            String username = jwtUtil.extractUsername(headers.getFirst("Authorization"));
             String purposeSign = jwtUtil.extractSpecificClaim(TempToken, "For");
             if (Objects.equals(usernameFromTemp, username) && Objects.equals(purposeSign, "re_verification")) {
                 try {
                     customUserDao.DeleteUser(username);
+                    postDao.DeleteAllPosts(username);
                     return new ResponseEntity<>(null, httpHeaders, 200);
                 } catch (Exception e) {
                     log.warn("at AccountController.deleteAccount", e);
                     return new ResponseEntity<>(null, httpHeaders, 500);
                 }
             } else {
-                return new ResponseEntity<>(null, httpHeaders, 401);
+                return new ResponseEntity<>(null, httpHeaders, 400); // accessToken, 임시 토큰에서 각각 추출한 사용자 이름이 일치하지 않는 경우
             }
-        } catch (ExpiredJwtException e) {
+        } catch (ExpiredJwtException e) { // 토큰 만료 예외 (여기서는 임시 토큰이 만료된 경우)
             return new ResponseEntity<>(null, headers, 401);
         }
     }

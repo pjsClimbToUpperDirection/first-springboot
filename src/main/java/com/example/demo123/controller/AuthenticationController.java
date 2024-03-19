@@ -114,7 +114,12 @@ public class AuthenticationController {
     @PostMapping("/verification")
     public ResponseEntity<TokenWithSomeUserDetails> re_verification(@RequestHeader HttpHeaders headers, @RequestBody UserForm userForm) { // dto 내부에 password 정의
         try {
-            String username = jwtUtil.extractUsername(headers.getFirst("Authorization"));
+            String username;
+            try {
+                username = jwtUtil.extractUsername(headers.getFirst("Authorization")); // jwt 에서 사용자 이름 추출
+            } catch (ExpiredJwtException e) {
+                username = e.getClaims().getSubject();
+            }
             if (username != null) {
                 userForm.setUsername(username); // 추후 다른 정보로도 조회할 여지를 남기고자 dto 에 값 할당하고 사용
                 try {
@@ -123,7 +128,7 @@ public class AuthenticationController {
                         if (password.equals(userForm.getPassword())) { // 요청으로 들어온 암호, username 을 통해 조회한 암호의 일치 여부
                             Map<String, Object> claims = new HashMap<>();
                             claims.put("For", "re_verification"); // keyOfClaim, value
-                            String TempToken_Mod_Pw = jwtUtil.generateTempToken(claims, username, 100); // 100초
+                            String TempToken_Mod_Pw = jwtUtil.generateTempToken(claims, username, validedPeriod * 2); // validedPeriod 의 2배
                             TokenWithSomeUserDetails tokenWithUserDetails = TokenWithSomeUserDetails.builder()
                                     .accessToken(TempToken_Mod_Pw).build(); // accessToken 값에서 임시 토큰 확인 가능
                             return new ResponseEntity<>(tokenWithUserDetails, httpHeaders, 200);
