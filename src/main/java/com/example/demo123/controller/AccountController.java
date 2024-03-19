@@ -6,10 +6,12 @@ import com.example.demo123.data.dao.PostDao;
 import com.example.demo123.data.dao.RedisDao;
 import com.example.demo123.data.dto.CustomUserDetails;
 import com.example.demo123.data.dto.controller.AuthNumberVerification;
+import com.example.demo123.data.dto.controller.PasswordRecovery;
 import com.example.demo123.data.dto.controller.UserForm;
 import com.example.demo123.service.AuthenticationNumberCreator;
 import io.jsonwebtoken.ExpiredJwtException;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
@@ -29,6 +31,9 @@ public class AccountController {
     private final AuthenticationNumberCreator authenticationNumberCreator;
     private final jwtUtil jwtUtil;
     private final PostDao postDao;
+
+    @Value("${jwt.validedPeriod}")
+    private Integer validedPeriod;
 
     public AccountController(HttpHeaders httpHeaders, CustomUserDao customUserDao, RedisDao redisDao, AuthenticationNumberCreator authenticationNumberCreator, jwtUtil jwtUtil, PostDao postDao) {
         this.httpHeaders = httpHeaders;
@@ -53,7 +58,7 @@ public class AccountController {
                 redisDao.setHashOperations(userForm.getUsername() + "_for_register", "password", userForm.getPassword());
                 redisDao.setHashOperations(userForm.getUsername() + "_for_register", "email", userForm.getEmail());
 
-                redisDao.setExpireTime(userForm.getUsername() + "_for_register", 90); // 90초 (인증번호는 70초)
+                redisDao.setExpireTime(userForm.getUsername() + "_for_register", validedPeriod * 3);
 
                 authenticationNumberCreator.AuthNumberCreation(userForm.getEmail(), "최초 가입 시 이메일 인증을 위한 인증번호", userForm.getUsername());
                 return new ResponseEntity<>(null, httpHeaders, 204);
@@ -66,7 +71,7 @@ public class AccountController {
         }
     }
     @PostMapping("/register/verification")
-    public ResponseEntity<Void> VerificationForRegistration(@RequestBody AuthNumberVerification authNumberVerification){
+    public ResponseEntity<Void> VerificationForRegistration(@RequestBody AuthNumberVerification authNumberVerification) {
         String username = authenticationNumberCreator.AuthNumberVerifier(authNumberVerification);
         if (username != null) { // 인증번호가 정확할 시
             try {
@@ -104,7 +109,7 @@ public class AccountController {
             String purposeSign = jwtUtil.extractSpecificClaim(TempToken, "For");
             if (Objects.equals(usernameFromTemp, username) && Objects.equals(purposeSign, "re_verification")) {
                 authenticationNumberCreator.AuthNumberCreation(userForm.getEmail(), "이메일 주소 변경시 주소의 유효함을 검증하기 위한 인증번호", username); // 인증번호 전송
-                redisDao.setValues(username + "_for_modification_of_emailAddress", userForm.getEmail(), 90); // 90초 (인증번호는 70초)
+                redisDao.setValues(username + "_for_modification_of_emailAddress", userForm.getEmail(), validedPeriod * 3);
                 return new ResponseEntity<>(null, headers, 204);
             } else {
                 return new ResponseEntity<>(null, httpHeaders, 401);
@@ -196,6 +201,47 @@ public class AccountController {
             }
         } catch (ExpiredJwtException e) { // 토큰 만료 예외 (여기서는 임시 토큰이 만료된 경우)
             return new ResponseEntity<>(null, headers, 401);
+        }
+    }
+
+
+
+
+    // 비밀번호를 잃어버렸을 시 이메일 인증을 통한 계정 복구
+    @PostMapping("/recovery/account/request")
+    public ResponseEntity<Void> requestAuthNumberForAccountRecovery(@RequestBody UserForm userForm) { // dto 내에 username, password, email 정의
+        try {
+            String username = userForm.getUsername();
+            String email = customUserDao.findUserDetailsByUserName(username).getEmail();
+            if (email != null) {
+                authenticationNumberCreator.AuthNumberCreation(email, "계정 복구시 본인 확인을 위한 인증번호", username); // 인증번호 전송
+                redisDao.setValues(username + "_for_recovery_of_account", userForm.getEmail(), validedPeriod * 3);
+                return new ResponseEntity<>(null, httpHeaders, 204);
+            } else {
+                return new ResponseEntity<>(null, httpHeaders, 400);
+            }
+        } catch (Exception e) {
+            return new ResponseEntity<>(null, httpHeaders, 500);
+        }
+    }
+    // 인증번호 확인을 위한 로직
+    @PatchMapping("/recovery/account/verification")
+    public ResponseEntity<Void> accountRecovery(@RequestBody PasswordRecovery passwordRecovery) { // 변경할 password 전송
+        AuthNumberVerification authNumberVerification = new AuthNumberVerification();
+        authNumberVerification.setNum1(passwordRecovery.getNum1());
+        authNumberVerification.setNum2(passwordRecovery.getNum2());
+        String username = authenticationNumberCreator.AuthNumberVerifier(authNumberVerification);
+        if (username != null) { // 인증번호가 정확할 시 (해당 인증번호로 사용자 이름 조회 성공)
+            try {
+                passwordRecovery.setUsername(username);
+                customUserDao.ModifyPassword(passwordRecovery);
+                return new ResponseEntity<>(null, httpHeaders, 200);
+            } catch (Exception e) {
+                log.warn("at AccountController.modifyEmailAddress", e);
+                return new ResponseEntity<>(null, httpHeaders, 500);
+            }
+        } else {
+            return new ResponseEntity<>(null, httpHeaders, 401);
         }
     }
 }
