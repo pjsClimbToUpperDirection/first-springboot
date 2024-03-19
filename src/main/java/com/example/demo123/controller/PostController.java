@@ -15,18 +15,16 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/v1/post-api")
 public class PostController {
     private final PostDao postDao;
-    private final HttpHeaders headers;
     private final jwtUtil jwtUtil;
-    public PostController(PostDao postDao, HttpHeaders headers, jwtUtil jwtutil) {
+    public PostController(PostDao postDao, jwtUtil jwtutil) {
         this.postDao = postDao;
-        this.headers = headers;
         this.jwtUtil = jwtutil;
     }
 
     // 한번에 하나의 포스트만 업로드 가능
     // todo writer 는 추후 토큰에서 사용자 이름을 추출하여 추가하도록 구현할 것
     @PostMapping("/uploadPost")
-    public ResponseEntity<Void> UploadPost(@RequestBody Post post){
+    public ResponseEntity<Void> UploadPost(@RequestHeader HttpHeaders headers, @RequestBody Post post){
         String username;
         // 토큰 만료 여부와 상관없이 사용자 이름을 추출하도록 구현됨
         try {

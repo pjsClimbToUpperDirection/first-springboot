@@ -74,9 +74,9 @@ public class AuthenticationController {
         // id, pw 유효할 시 사용자 정보를 가져옴
         final CustomUserDetails customUserDetails = (CustomUserDetails) userDetailsService.loadUserByUsername(authenticationRequest.getUsername());
 
-        // jwt, refresh 발급 (유효기간 100, 1000초)
+        // jwt, refresh 발급 (유효기간 x, x * 60초)
         String Access = jwtUtil.generateJwt(null, customUserDetails, validedPeriod);
-        String Refresh = jwtUtil.generateRefresh(null, validedPeriod * 10);
+        String Refresh = jwtUtil.generateRefresh(null, validedPeriod * 60);
         TokenWithSomeUserDetails tokenWithSomeUserDetails = TokenWithSomeUserDetails.builder()
                 .accessToken(Access)
                 .refreshToken(Refresh)
