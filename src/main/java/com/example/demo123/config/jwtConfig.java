@@ -30,6 +30,7 @@ public class jwtConfig {
                 .authorizeHttpRequests((authorizeHttpRequests) -> authorizeHttpRequests
                         .requestMatchers("/api/v1/auth-api/issue").permitAll()
                         .requestMatchers("/api/v1/account-api/register/request").permitAll()
+                        .requestMatchers("/api/v1/account-api/register/verification").permitAll()
                         .requestMatchers("/api/v1/account-api/recovery/account/request").permitAll()
                         .requestMatchers("/api/v1/account-api/recovery/account/verification").permitAll()
                         .anyRequest().authenticated()

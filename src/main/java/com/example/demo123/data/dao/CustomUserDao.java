@@ -4,6 +4,7 @@ import com.example.demo123.config.DbConfig;
 import com.example.demo123.data.dto.CustomUserDetails;
 import com.example.demo123.data.dto.controller.UserForm;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Repository;
 
 import javax.sql.DataSource;
@@ -15,7 +16,10 @@ import java.util.Date;
 
 @Repository
 public class CustomUserDao {
-    public CustomUserDao(){}
+    private final BCryptPasswordEncoder bCryptPasswordEncoder;
+    public CustomUserDao(BCryptPasswordEncoder bCryptPasswordEncoder) {
+        this.bCryptPasswordEncoder = bCryptPasswordEncoder;
+    }
 
     AnnotationConfigApplicationContext ctx = new AnnotationConfigApplicationContext(DbConfig.class);
     DataSource dataSource = ctx.getBean("dataSource", DataSource.class);
@@ -52,7 +56,7 @@ public class CustomUserDao {
         connection = dataSource.getConnection();
         PreparedStatement statement = connection.prepareStatement("INSERT INTO userdetails (username, password, email, emailVerified, locked, role, created_date) values (?, ?, ?, ?, ?, ?, ?)");
         statement.setString(1, customUserDetails.getUsername());
-        statement.setString(2, customUserDetails.getPassword());
+        statement.setString(2, bCryptPasswordEncoder.encode(customUserDetails.getPassword()));
         statement.setString(3, customUserDetails.getEmail());
         statement.setBoolean(4, customUserDetails.isEmailVerified());
         statement.setBoolean(5, false);
@@ -62,12 +66,12 @@ public class CustomUserDao {
         connection.close();
     }
 
-    public String confirmPassword(UserForm userForm) throws Exception {
+    public String confirmPassword(String username) throws Exception {
         String password = null;
         Connection connection;
         connection = dataSource.getConnection();
-        PreparedStatement statement = connection.prepareStatement("SELECT password From userdetails WHERE username = ?");
-        statement.setString(1, userForm.getUsername());
+        PreparedStatement statement = connection.prepareStatement("SELECT password From userdetails WHERE username = ?"); // password  통해 username 조회
+        statement.setString(1, username);
         ResultSet passwordConfirmation = statement.executeQuery();
         if (passwordConfirmation.next()) {
             password = passwordConfirmation.getString(1);
@@ -80,7 +84,7 @@ public class CustomUserDao {
         Connection connection;
         connection = dataSource.getConnection();
         PreparedStatement statement = connection.prepareStatement("UPDATE userdetails SET password = ?, last_modified_date = ? WHERE username = ?");
-        statement.setString(1, userForm.getPassword()); // 변경될 pw
+        statement.setString(1, bCryptPasswordEncoder.encode(userForm.getPassword())); // 변경될 pw
         statement.setString(2, date.format(now) + "_00"); // 최종 수정일자 (비밀번호)
         statement.setString(3, userForm.getUsername());
         statement.executeUpdate();

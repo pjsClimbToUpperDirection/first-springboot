@@ -17,6 +17,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -24,6 +25,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 @Slf4j
 @PropertySource("classpath:application.properties")
@@ -36,17 +38,27 @@ public class AuthenticationController {
     private final jwtUtil jwtUtil;
     private final RedisDao redisDao;
     private final CustomUserDao customUserDao;
+    private final BCryptPasswordEncoder bCryptPasswordEncoder;
 
     @Value("${jwt.validedPeriod}")
     private Integer validedPeriod;
 
-    public AuthenticationController(AuthenticationManager authenticationManager, UserDetailsService userDetailsService, jwtUtil jwtUtil, HttpHeaders httpHeaders, RedisDao redisDao, CustomUserDao customUserDao) {
+    public AuthenticationController(
+            AuthenticationManager authenticationManager,
+            UserDetailsService userDetailsService,
+            jwtUtil jwtUtil,
+            HttpHeaders httpHeaders,
+            RedisDao redisDao,
+            CustomUserDao customUserDao,
+            BCryptPasswordEncoder bCryptPasswordEncoder
+    ) {
         this.authenticationManager = authenticationManager;
         this.userDetailsService = userDetailsService;
         this.jwtUtil = jwtUtil;
         this.httpHeaders = httpHeaders;
         this.redisDao = redisDao;
         this.customUserDao = customUserDao;
+        this.bCryptPasswordEncoder = bCryptPasswordEncoder;
     }
 
     // 토큰 발급, 무효화 양쪽 모두 인증 절차를 거쳐야 한다.
@@ -113,40 +125,26 @@ public class AuthenticationController {
     // 로그인 상태에서 추가적인 본인 확인을 위해 비밀번호를 다시 확인
     @PostMapping("/verification")
     public ResponseEntity<TokenWithSomeUserDetails> re_verification(@RequestHeader HttpHeaders headers, @RequestBody UserForm userForm) { // dto 내부에 password 정의
+        String username;
         try {
-            String username;
-            try {
-                username = jwtUtil.extractUsername(headers.getFirst("Authorization")); // jwt 에서 사용자 이름 추출
-            } catch (ExpiredJwtException e) {
-                username = e.getClaims().getSubject();
-            }
-            if (username != null) {
-                userForm.setUsername(username); // 추후 다른 정보로도 조회할 여지를 남기고자 dto 에 값 할당하고 사용
-                try {
-                    String password = customUserDao.confirmPassword(userForm); // username 을 통해 password 조회
-                    if (password != null) {
-                        if (password.equals(userForm.getPassword())) { // 요청으로 들어온 암호, username 을 통해 조회한 암호의 일치 여부
-                            Map<String, Object> claims = new HashMap<>();
-                            claims.put("For", "re_verification"); // keyOfClaim, value
-                            String TempToken_Mod_Pw = jwtUtil.generateTempToken(claims, username, validedPeriod * 2); // validedPeriod 의 2배
-                            TokenWithSomeUserDetails tokenWithUserDetails = TokenWithSomeUserDetails.builder()
-                                    .accessToken(TempToken_Mod_Pw).build(); // accessToken 값에서 임시 토큰 확인 가능
-                            return new ResponseEntity<>(tokenWithUserDetails, httpHeaders, 200);
-                        } else {
-                            return new ResponseEntity<>(null, httpHeaders, 401);
-                        }
-                    } else {
-                        return new ResponseEntity<>(null, httpHeaders, 400);
-                    }
-                } catch (Exception e) {
-                    log.warn("at AuthenticationController.re_verification", e);
-                    return new ResponseEntity<>(null, httpHeaders, 500);
-                }
+            username = jwtUtil.extractUsername(headers.getFirst("Authorization")); // jwt 에서 사용자 이름 추출
+        } catch (ExpiredJwtException e) {
+            username = e.getClaims().getSubject();
+        }
+        try {
+            if (bCryptPasswordEncoder.matches(userForm.getPassword(), customUserDao.confirmPassword(username))) { // dto 의 password, username 를 통해 조회한 사용자 password 의 일치 여부
+                Map<String, Object> claims = new HashMap<>();
+                claims.put("For", "re_verification"); // keyOfClaim, value
+                String TempToken_Mod_Pw = jwtUtil.generateTempToken(claims, username, validedPeriod * 2); // validedPeriod 의 2배
+                TokenWithSomeUserDetails tokenWithUserDetails = TokenWithSomeUserDetails.builder()
+                        .accessToken(TempToken_Mod_Pw).build(); // accessToken 값에서 임시 토큰 확인 가능
+                return new ResponseEntity<>(tokenWithUserDetails, httpHeaders, 200);
             } else {
                 return new ResponseEntity<>(null, httpHeaders, 401);
             }
-        } catch (ExpiredJwtException e) {
-            return new ResponseEntity<>(null, headers, 401);
+        } catch (Exception e) {
+            log.warn("at AuthenticationController.re_verification", e);
+            return new ResponseEntity<>(null, httpHeaders, 500);
         }
     }
 }

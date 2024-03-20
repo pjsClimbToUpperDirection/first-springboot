@@ -8,15 +8,18 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 
 @Service
 public class CustomAuthenticationManager implements AuthenticationManager {
     private final UserDetailsService userDetailsService; // userDetailsServiceImpl
+    private final BCryptPasswordEncoder bCryptPasswordEncoder;
 
-    public CustomAuthenticationManager(UserDetailsService userDetailsService) {
+    public CustomAuthenticationManager(UserDetailsService userDetailsService, BCryptPasswordEncoder bCryptPasswordEncoder) {
         this.userDetailsService = userDetailsService;
+        this.bCryptPasswordEncoder = bCryptPasswordEncoder;
     }
 
     @Override
@@ -34,7 +37,7 @@ public class CustomAuthenticationManager implements AuthenticationManager {
         }
 
         // 사용자 정보(암호)를 확인하여 인증 수행
-        if (!password.equals(userDetails.getPassword())) {
+        if (!bCryptPasswordEncoder.matches(password, userDetails.getPassword())) {
             throw new BadCredentialsException("Invalid password");
         }
 

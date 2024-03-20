@@ -15,7 +15,7 @@ public class webConfig implements WebMvcConfigurer {
     private String allowedOrigin;
 
     @Override
-    public void addCorsMappings(CorsRegistry corsRegistry) {
+    public void addCorsMappings(CorsRegistry corsRegistry) { // 해당 출처 이하의 모든 영역에서 교차 출처 리소스 공유 (cors) 허용
         corsRegistry.addMapping("/**")
                 .allowedOrigins(allowedOrigin)
                 .allowedMethods("*")
